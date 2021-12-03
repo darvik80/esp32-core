@@ -1,0 +1,61 @@
+{
+  "name": "esp-core",
+  "version": "1.0.0",
+  "description": "ESP32/ESP8266 simple framework",
+  "keywords": "framework,esp32,esp8266",
+  "repository":
+  {
+    "type": "git",
+    "url": "https://github.com/darvik80/esp-core.git"
+  },
+  "authors":
+  [
+    {
+      "name": "Ivan Kishchenko",
+      "email": "darvik@crearts.xyz",
+      "url": "https://www.linkedin.com/in/darvik/",
+      "maintainer": true
+    }
+  ],
+  "license": "MIT",
+  "homepage": "https://crearts.xyz/",
+  "frameworks": "arduino",
+  "platforms": ["espressif8266", "espressif32"],
+  "dependencies": [
+    {
+      "owner": "ottowinter",
+      "name": "ESPAsyncTCP-esphome",
+      "version": "^1.2.2",
+      "platforms": "espressif8266"
+    },
+    {
+      "name": "AsyncTCP-esphome",
+      "version": "^1.1.1",
+      "platforms": "espressif32"
+    },
+    {
+      "owner": "ottowinter",
+      "name": "AsyncMqttClient-esphome",
+      "version": "^0.8.6",
+      "platforms": ["espressif8266", "espressif32"]
+    },
+    {
+      "owner": "olikraus",
+      "name": "U8g2",
+      "version": "^2.28.8",
+      "platforms": ["espressif8266", "espressif32"]
+    },
+    {
+      "owner": "bblanchon",
+      "name": "ArduinoJson",
+      "version": "^6.18.1",
+      "platforms": ["espressif8266", "espressif32"]
+    },
+    {
+      "owner": "werediver",
+      "name": "fmt",
+      "version": "^8.0.1",
+      "platforms": ["espressif8266", "espressif32"]
+    }
+  ]
+}

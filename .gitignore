@@ -30,3 +30,13 @@
 *.exe
 *.out
 *.app
+
+main.cpp
+platformio.ini
+CMakeLists*.txt
+
+.pio
+.idea
+cmake-build-*
+esp32c3.csv
+src/MyConfig.h
