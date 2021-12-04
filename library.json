@@ -1,6 +1,6 @@
 {
   "name": "esp-core",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "ESP32/ESP8266 simple framework",
   "keywords": "framework,esp32,esp8266",
   "repository":
