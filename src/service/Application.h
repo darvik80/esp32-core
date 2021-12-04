@@ -20,7 +20,7 @@ class Application : public IService, public MessageSubscriber<Application, WifiC
     Registry _registry;
 public:
     explicit Application(logging::level lvl)
-            : IService(ServiceId::APP), _registry(new InCodeProperties()) {
+            : IService(ServiceId::APP), _registry(new InCodePropertiesSource()) {
         Serial.begin(115200);
         logging::setLogLevel(lvl);
         logging::addLogger(new logging::SerialLogger());

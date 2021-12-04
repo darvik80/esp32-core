@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "Properties.h"
+#include "PropertiesSource.h"
 #include "message/MessageBus.h"
 #include "ServiceId.h"
 #include <vector>
@@ -42,9 +42,9 @@ class Registry {
     MessageBus _bus;
     ServiceArray _services{};
 
-    Properties *_props;
+    PropertiesSource *_props;
 public:
-    explicit Registry(Properties *props) : _props(props) {}
+    explicit Registry(PropertiesSource *props) : _props(props) {}
 
     virtual void add(IService *service) {
         if ((size_t) service->getServiceId() < _services.size()) {
@@ -69,7 +69,7 @@ public:
         return &_bus;
     }
 
-    virtual Properties *getProperties() {
+    virtual PropertiesSource *getProperties() {
         return _props;
     }
 };
