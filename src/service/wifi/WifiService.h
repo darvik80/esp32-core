@@ -63,12 +63,12 @@ public:
                 wifi::log::info("Got IP address: {}", WiFi.localIP().toString().c_str());
                 sendMessage(
                         Service::getMessageBus(),
-                        WifiConnected{
+                        std::make_shared<WifiConnected>(
                                 WiFi.localIP().toString().c_str(),
                                 WiFi.subnetMask().toString().c_str(),
                                 WiFi.gatewayIP().toString().c_str(),
                                 WiFi.macAddress().c_str()
-                        }
+                        )
                 );
                 break;
             case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:

@@ -15,6 +15,7 @@
 #include <service/mqtt/MqttService.h>
 
 #include <ArduinoJson.h>
+#include <freertos/queue.h>
 
 class Application : public IService, public MessageSubscriber<Application, WifiConnected, WifiDisconnected, JoystickEvent> {
     Registry _registry;
@@ -61,6 +62,7 @@ public:
     }
 
     void loop() override {
+        getMessageBus()->loop();
         for (auto service: getRegistry()->getServices()) {
             if (service) {
                 service->loop();
