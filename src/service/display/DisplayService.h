@@ -33,7 +33,7 @@ private:
     }
 
 public:
-    explicit DisplayService(Registry *registry)
+    explicit DisplayService(IRegistry *registry)
             : Service(ServiceId::OLED, registry) {
     }
 

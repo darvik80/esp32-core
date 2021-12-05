@@ -7,19 +7,37 @@
 #include "Message.h"
 #include "MessageSubscriber.h"
 
-class MessageBus : public IMessageSubscriber, public IMessageProducer {
+#include <set>
+#include <vector>
+#include <freertos/queue.h>
+#include <freertos/timers.h>
+
+class IMessageBus : public IMessageSubscriber, public IMessageProducer {
+public:
+    virtual void subscribe(IMessageSubscriber *subscriber) = 0;
+
+    virtual void loop() = 0;
+};
+
+template<size_t subSize, size_t queueSize = 10, size_t timerSize = subSize>
+class MessageBus : public IMessageBus {
     struct MessageHolder {
         std::shared_ptr<IMessage> msg;
+        TimerHandle_t handler{};
+        MessageBus *bus{nullptr};
+        bool repeat{false};
     };
-    std::vector<IMessageSubscriber *> _subscribers;
+    std::array<MessageHolder, timerSize> _timers;
 
-    QueueHandle_t _queue{nullptr};
+    QueueHandle_t _queue;
+
+    std::vector<IMessageSubscriber *> _subscribers{subSize};
 public:
     MessageBus() {
-        _queue = xQueueCreate(10, sizeof(void*));
+        _queue = xQueueCreate(queueSize, sizeof(void *));
     }
 
-    void subscribe(IMessageSubscriber *subscriber) {
+    void subscribe(IMessageSubscriber *subscriber) override {
         _subscribers.emplace_back(subscriber);
     }
 
@@ -29,7 +47,7 @@ public:
         }
     }
 
-    void loop() {
+    void loop() override {
         if (_queue) {
             MessageHolder *holder = nullptr;
             while (pdPASS == xQueueReceive(_queue, &holder, 0)) {
@@ -50,6 +68,35 @@ public:
             msg::log::debug("send msg: {}", msg->getMsgId());
             auto holder = new MessageHolder{msg};
             xQueueSendToBack(_queue, &holder, portMAX_DELAY);
+        }
+    }
+
+    void scheduleMessage(uint32_t delay, bool repeat, const std::shared_ptr<IMessage> &msg) override {
+        for (auto &timer: _timers) {
+            if (timer.handler) {
+                if (!xTimerIsTimerActive(timer.handler)) {
+                    xTimerStop(timer.handler, 0);
+                    xTimerDelete(timer.handler, 0);
+                } else {
+                    continue;
+                }
+            }
+
+
+            msg::log::debug("schedule msg: {} {}", msg->getMsgId(), delay);
+
+
+            timer.msg = msg;
+            timer.repeat = repeat;
+            timer.bus = this;
+            timer.handler = xTimerCreate("timer", pdMS_TO_TICKS(delay), repeat, &timer, [](TimerHandle_t timer) {
+                auto holder = (MessageHolder *) pvTimerGetTimerID(timer);
+                msg::log::debug("delayed msg: {}", holder->msg->getMsgId());
+                holder->bus->onMessage(*holder->msg.get());
+            });
+            xTimerStart(timer.handler, 0);
+
+            break;
         }
     }
 };

@@ -35,7 +35,7 @@ private:
 
     }
 public:
-    explicit WifiService(Registry *registry)
+    explicit WifiService(IRegistry *registry)
             : Service(ServiceId::WIFI, registry) {}
 
     static void onTimer(WifiService *service) {

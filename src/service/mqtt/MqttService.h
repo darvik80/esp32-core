@@ -36,7 +36,7 @@ class MqttService : public Service, public MessageSubscriber<MqttService, WifiCo
     uint16_t _port{};
 
 public:
-    explicit MqttService(Registry *registry)
+    explicit MqttService(IRegistry *registry)
             : Service(ServiceId::MQTT, registry) {}
 
     void setup() override {

@@ -8,12 +8,12 @@
 #include "ServiceId.h"
 
 class Service : public IService {
-    Registry* _registry;
+    IRegistry* _registry;
 public:
-    Service(ServiceId serviceId, Registry *registry)
+    Service(ServiceId serviceId, IRegistry *registry)
             : IService(serviceId), _registry(registry) {}
 
-    Registry* getRegistry() override {
+    IRegistry* getRegistry() override {
         return _registry;
     }
 
@@ -21,7 +21,7 @@ public:
 
     void loop() override { }
 
-    MessageBus *getMessageBus() override {
+    IMessageBus *getMessageBus() override {
         return _registry->getMessageBus();
     }
 };

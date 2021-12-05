@@ -14,7 +14,7 @@ struct Property {
     virtual ~Property() = default;
 };
 
-class PropertiesSource {
+class IPropertiesSource {
 public:
     virtual std::string getStr(const std::string &name, const std::string &def) = 0;
 
@@ -34,7 +34,7 @@ public:
 };
 
 
-class InCodePropertiesSource : public PropertiesSource {
+class InCodePropertiesSource : public IPropertiesSource {
     typedef std::variant<std::string, uint16_t, Property*> PropertyStorage;
     std::unordered_map<std::string, PropertyStorage> _props;
 public:

@@ -15,13 +15,13 @@
 #include <service/mqtt/MqttService.h>
 
 #include <ArduinoJson.h>
-#include <freertos/queue.h>
 
 class Application : public IService, public MessageSubscriber<Application, WifiConnected, WifiDisconnected, JoystickEvent> {
+    IMessageBus* _bus;
     Registry _registry;
 public:
-    explicit Application(logging::level lvl)
-            : IService(ServiceId::APP), _registry(new InCodePropertiesSource()) {
+    explicit Application(logging::level lvl, IMessageBus* bus)
+            : IService(ServiceId::APP), _registry(bus, new InCodePropertiesSource()) {
         Serial.begin(115200);
         logging::setLogLevel(lvl);
         logging::addLogger(new logging::SerialLogger());
@@ -70,12 +70,12 @@ public:
         }
     }
 
-    Registry *getRegistry() override {
+    IRegistry *getRegistry() override {
         return &_registry;
     }
 
-    MessageBus *getMessageBus() override {
-        return _registry.getMessageBus();
+    IMessageBus *getMessageBus() override {
+        return _bus;
     }
 
     virtual void onMessage(const WifiConnected &msg) {

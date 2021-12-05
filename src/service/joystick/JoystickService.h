@@ -43,7 +43,7 @@ class JoystickService : public Service {
     JoystickEvent _event;
     JoystickProperties *_props{nullptr};
 public:
-    explicit JoystickService(Registry *registry)
+    explicit JoystickService(IRegistry *registry)
             : Service(ServiceId::JOYSTICK, registry) {}
 
     void setup() override {
