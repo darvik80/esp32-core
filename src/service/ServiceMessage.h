@@ -13,6 +13,8 @@ enum MessageId {
     MQTT_DISCONNECTED,
     MQTT_MESSAGE,
     JOYSTICK_EVENT,
+
+    USER_EVENT
 };
 
 class WifiConnected : public Message<WIFI_CONNECTED> {
