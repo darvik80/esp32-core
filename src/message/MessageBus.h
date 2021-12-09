@@ -6,6 +6,7 @@
 
 #include "Message.h"
 #include "MessageSubscriber.h"
+#include "MessageProducer.h"
 
 #include <set>
 #include <vector>

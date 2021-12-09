@@ -16,8 +16,6 @@ LOG_COMPONENT_SETUP(wifi);
 #include <Ticker.h>
 #include <WiFi.h>
 
-#include "message/Message.h"
-
 #define PROP_WIFI_SSID "wifi.ssid"
 #define PROP_WIFI_PASS "wifi.pass"
 

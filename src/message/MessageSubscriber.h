@@ -4,18 +4,12 @@
 
 #pragma once
 
+#include "Message.h"
 #include "MessageLogger.h"
 
 class IMessageSubscriber {
 public:
     virtual void onMessage(const IMessage &msg) = 0;
-};
-
-class IMessageProducer {
-public:
-    virtual void sendMessage(const IMessage &msg) = 0;
-    virtual void sendMessage(const std::shared_ptr<IMessage> &msg) = 0;
-    virtual void scheduleMessage(uint32_t delay, bool repeat, const std::shared_ptr<IMessage> &msg) = 0;
 };
 
 template<typename T, typename Msg1 = void, typename Msg2 = void, typename Msg3 = void, typename Msg4 = void>

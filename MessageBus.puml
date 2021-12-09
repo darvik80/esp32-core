@@ -1,0 +1,84 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+enum MessageId {
+    WIFI_CONNECTED,
+    WIFI_DISCONNECTED,
+    JOYSTICK_EVENT,
+    MQTT_CONNECTED,
+    MQTT_DISCONNECTED,
+    MQTT_MESSAGE,
+}
+
+class IMessage {
+    MsgId getMsgId() const
+}
+
+class WifiConnected {
+    +std::string ip;
+    +std::string mask;
+    +std::string gateway;
+    +std::string macAddress;
+
+    MsgId getMsgId() const
+}
+
+WifiConnected <|.. IMessage
+
+class WifiDisconnected {
+    MsgId getMsgId() const
+}
+
+WifiDisconnected <|.. IMessage
+
+class MQTTConnected {
+    +std::string address
+    MsgId getMsgId() const
+}
+
+MQTTConnected <|.. IMessage
+
+class MQTTDisconnected {
+    MsgId getMsgId() const
+}
+
+MQTTDisconnected <|.. IMessage
+
+interface IMessageSubscriber {
+    void onMessage(const IMessage &msg)
+}
+
+interface IMessageProducer {
+    void sendMessage(const IMessage &msg)
+    void sendMessage(const std::shared_ptr<IMessage> &msg)
+    void scheduleMessage(uint32_t delay, bool repeat, const std::shared_ptr<IMessage> &msg)
+}
+
+interface IMessageBus {
+    void subscribe(IMessageSubscriber *subscriber)
+    void loop() = 0;
+}
+
+IMessageProducer <|-- IMessageBus
+IMessageSubscriber <|-- IMessageBus
+
+class MessageSubscriber {
+    void onMessage(const IMessage &msg)
+}
+
+IMessageSubscriber <|.. MessageSubscriber
+
+class MessageBus {
+    void subscribe(IMessageSubscriber *subscriber)
+    void loop()
+
+    void onMessage(const IMessage &msg)
+
+    void sendMessage(const IMessage &msg)
+    void sendMessage(const std::shared_ptr<IMessage> &msg)
+    void scheduleMessage(uint32_t delay, bool repeat, const std::shared_ptr<IMessage> &msg)
+}
+
+IMessageBus <|.. MessageBus
+
+@enduml

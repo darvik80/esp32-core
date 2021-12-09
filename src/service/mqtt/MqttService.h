@@ -85,7 +85,7 @@ public:
 
     void onMqttConnect(bool sessionPresent) {
         mqtt::log::info("connected");
-        sendMessage(getMessageBus(), MqttConnected{});
+        sendMessage(getMessageBus(), MqttConnected{_host+":"+std::to_string(_port)});
 
         _mqttClient.subscribe("v1/devices/me/rpc/request/+", 1);
     }

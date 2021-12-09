@@ -6,6 +6,7 @@
 
 #include "Registry.h"
 #include "ServiceId.h"
+#include "ServiceMessage.h"
 
 class Service : public IService {
     IRegistry* _registry;

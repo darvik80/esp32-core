@@ -2,6 +2,9 @@
 
 Simple framework for ESP32/ESP8266
 
+#Class Diagrams
+![alternative text](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.github.com/plantuml/plantuml-server/master/src/main/webapp/resource/test2diagrams.txt)
+
 ## Changelog
 
 ### v0.0.1
@@ -58,3 +61,4 @@ struct JoystickProperties : Property {
 ```
 Generate 1 event:
 1. JoystickEvent
+
