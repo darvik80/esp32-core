@@ -3,7 +3,7 @@
 Simple framework for ESP32/ESP8266
 
 #Class Diagrams
-![alternative text](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.github.com/plantuml/plantuml-server/master/src/main/webapp/resource/test2diagrams.txt)
+![alternative text](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/darvik80/esp-core/queue/MessageBus.puml)
 
 ## Changelog
 
