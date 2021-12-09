@@ -6,13 +6,15 @@ skinparam classBackgroundColor LightGray
 skinparam arrowColor DarkBlue
 skinparam classBorderColor DarkBlue
 
+title Message Bus
+
 enum MessageId {
     WIFI_CONNECTED,
     WIFI_DISCONNECTED,
-    JOYSTICK_EVENT,
     MQTT_CONNECTED,
     MQTT_DISCONNECTED,
     MQTT_MESSAGE,
+    JOYSTICK_EVENT,
 }
 
 class IMessage {
@@ -61,7 +63,7 @@ interface IMessageProducer {
 
 interface IMessageBus {
     void subscribe(IMessageSubscriber *subscriber)
-    void loop() = 0;
+    void loop()
 }
 
 IMessageProducer <|-- IMessageBus
@@ -85,5 +87,7 @@ class MessageBus {
 }
 
 IMessageBus <|.. MessageBus
+
+IMessage --d[hidden]-> IMessageBus
 
 @enduml
