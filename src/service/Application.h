@@ -36,19 +36,19 @@ public:
         getMessageBus()->subscribe(this);
 
 #ifdef OLED_SERVICE
-        getRegistry()->add(new DisplayService(getRegistry()));
+        getRegistry()->create<DisplayService>();
 #endif
 
 #ifdef JOY_SERVICE
-        getRegistry()->add(new JoystickService(getRegistry()));
+        getRegistry()->create<JoystickService>();
 #endif
 
 #ifdef WIFI_SERVICE
-        getRegistry()->add(new WifiService(getRegistry()));
+        getRegistry()->create<WifiService>();
 #endif
 
 #ifdef MQTT_SERVICE
-        getRegistry()->add(new MqttService(getRegistry()));
+        getRegistry()->create<MqttService>();
 #endif
 
         for (auto service: getRegistry()->getServices()) {

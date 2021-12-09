@@ -45,9 +45,9 @@ public:
     virtual ServiceArray &getServices() = 0;
 
     template<typename C>
-    C *getService(LibServiceId id) {
+    C *getService(ServiceId id) {
         auto services = getServices();
-        if ((size_t) id < services.size()) {
+        if (id < services.size()) {
             return static_cast<C *>(services[(size_t) id]);
         }
 
