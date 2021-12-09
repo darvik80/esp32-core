@@ -119,18 +119,18 @@ public:
 #endif
 
 #ifdef MQTT_SERVICE
-        if (auto mqtt = getRegistry()->getService<MqttService>(LibServiceId::MQTT); mqtt) {
-            DynamicJsonDocument  doc(1024);
-            doc["leftAxisX"] = msg.leftAxis.x;
-            doc["leftAxisY"] = msg.leftAxis.y;
-            doc["rightAxisX"] = msg.rightAxis.x;
-            doc["rightAxisY"] = msg.rightAxis.y;
-            String event;
-            serializeJson(doc, event);
-
-            mqtt::log::info("event: {}", event.c_str());
-            mqtt->publish("v1/devices/me/telemetry", event.c_str());
-        }
+//        if (auto mqtt = getRegistry()->getService<MqttService>(LibServiceId::MQTT); mqtt) {
+//            DynamicJsonDocument  doc(1024);
+//            doc["leftAxisX"] = msg.leftAxis.x;
+//            doc["leftAxisY"] = msg.leftAxis.y;
+//            doc["rightAxisX"] = msg.rightAxis.x;
+//            doc["rightAxisY"] = msg.rightAxis.y;
+//            String event;
+//            serializeJson(doc, event);
+//
+//            mqtt::log::info("event: {}", event.c_str());
+//            mqtt->publish("v1/devices/me/telemetry", event.c_str());
+//        }
 #endif
     }
 };

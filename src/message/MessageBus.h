@@ -20,7 +20,7 @@ public:
     virtual void loop() = 0;
 };
 
-template<size_t subSize, size_t queueSize = 10, size_t timerSize = subSize>
+template<size_t queueSize = 10, size_t timerSize = 10>
 class MessageBus : public IMessageBus {
     struct MessageHolder {
         std::shared_ptr<IMessage> msg;
@@ -32,7 +32,7 @@ class MessageBus : public IMessageBus {
 
     QueueHandle_t _queue;
 
-    std::vector<IMessageSubscriber *> _subscribers{subSize};
+    std::vector<IMessageSubscriber *> _subscribers;
 public:
     MessageBus() {
         _queue = xQueueCreate(queueSize, sizeof(void *));
@@ -40,9 +40,11 @@ public:
 
     void subscribe(IMessageSubscriber *subscriber) override {
         _subscribers.emplace_back(subscriber);
+        msg::log::debug("subscribe: {}", _subscribers.size());
     }
 
     void onMessage(const IMessage &msg) override {
+        msg::log::debug("on msg: {}:{}", msg.getMsgId(), _subscribers.size());
         for (const auto sub: _subscribers) {
             sub->onMessage(msg);
         }
@@ -60,7 +62,7 @@ public:
     }
 
     void sendMessage(const IMessage &msg) override {
-        msg::log::debug("on msg: {}", msg.getMsgId());
+        msg::log::debug("send local msg: {}", msg.getMsgId());
         onMessage(msg);
     }
 

@@ -60,14 +60,13 @@ public:
 };
 
 class Registry : public IRegistry {
-    ServiceArray _services{};
+    ServiceArray _services{USER_SERVICES};
 
     IMessageBus *_bus;
     IPropertiesSource *_props;
 public:
     explicit Registry(IMessageBus *bus, IPropertiesSource *props)
             : _bus(bus), _props(props) {
-        _services.resize(USER_SERVICES);
     }
 
     void add(IService *service) override {
