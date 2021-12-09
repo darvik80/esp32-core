@@ -6,7 +6,7 @@
 
 #include "PropertiesSource.h"
 #include "message/MessageBus.h"
-#include "ServiceId.h"
+#include "LibServiceId.h"
 #include <vector>
 #include <array>
 #include <string>
@@ -17,14 +17,8 @@ class IRegistry;
 class IMessageBus;
 
 class IService {
-    ServiceId _serviceId;
 public:
-    explicit IService(ServiceId serviceId)
-            : _serviceId(serviceId) {}
-
-    [[nodiscard]] ServiceId getServiceId() const {
-        return _serviceId;
-    }
+    [[nodiscard]] virtual ServiceId getServiceId() const = 0;
 
     virtual void setup() = 0;
 
@@ -37,7 +31,7 @@ public:
     virtual ~IService() = default;
 };
 
-typedef std::array<IService *, (size_t) ServiceId::MAX_ID> ServiceArray;
+typedef std::vector<IService *> ServiceArray;
 
 class IRegistry {
 public:
@@ -46,7 +40,7 @@ public:
     virtual ServiceArray &getServices() = 0;
 
     template<typename C>
-    C *getService(ServiceId id) {
+    C *getService(LibServiceId id) {
         auto services = getServices();
         if ((size_t) id < services.size()) {
             return static_cast<C *>(services[(size_t) id]);
@@ -67,12 +61,16 @@ class Registry : public IRegistry {
     IPropertiesSource *_props;
 public:
     explicit Registry(IMessageBus *bus, IPropertiesSource *props)
-            : _bus(bus), _props(props) {}
+            : _bus(bus), _props(props) {
+        _services.resize(USER_SERVICES);
+    }
 
     void add(IService *service) override {
-        if ((size_t) service->getServiceId() < _services.size()) {
-            _services[(size_t) service->getServiceId()] = service;
+        if (service->getServiceId() >= _services.size()) {
+            _services.resize(service->getServiceId() + 1);
         }
+
+        _services[service->getServiceId()] = service;
     }
 
     ServiceArray &getServices() override {

@@ -4,12 +4,13 @@
 
 #pragma once
 
-enum class ServiceId {
+enum LibServiceId {
     APP,
     WIFI,
     MQTT,
     OLED,
     JOYSTICK,
-    MAX_ID
+    USER_SERVICES
 };
 
+typedef uint_least8_t ServiceId;

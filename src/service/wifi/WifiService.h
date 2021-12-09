@@ -34,7 +34,11 @@ private:
     }
 public:
     explicit WifiService(IRegistry *registry)
-            : Service(ServiceId::WIFI, registry) {}
+            : Service(registry) {}
+
+    [[nodiscard]] ServiceId getServiceId() const override {
+        return LibServiceId::WIFI;
+    }
 
     static void onTimer(WifiService *service) {
         service->raiseConnect();

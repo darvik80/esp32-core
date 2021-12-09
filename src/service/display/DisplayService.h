@@ -34,7 +34,11 @@ private:
 
 public:
     explicit DisplayService(IRegistry *registry)
-            : Service(ServiceId::OLED, registry) {
+            : Service(registry) {
+    }
+
+    [[nodiscard]] ServiceId getServiceId() const override {
+        return LibServiceId::OLED;
     }
 
     void setText(int line, std::string_view text) {

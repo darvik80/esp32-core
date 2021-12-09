@@ -44,7 +44,12 @@ class JoystickService : public Service {
     JoystickProperties *_props{nullptr};
 public:
     explicit JoystickService(IRegistry *registry)
-            : Service(ServiceId::JOYSTICK, registry) {}
+            : Service(registry) {}
+
+
+    [[nodiscard]] ServiceId getServiceId() const override {
+        return LibServiceId::JOYSTICK;
+    }
 
     void setup() override {
         _props = getRegistry()->getProperties()->get<JoystickProperties>(PROP_JOYSTICK);

@@ -37,7 +37,11 @@ class MqttService : public Service, public MessageSubscriber<MqttService, WifiCo
 
 public:
     explicit MqttService(IRegistry *registry)
-            : Service(ServiceId::MQTT, registry) {}
+            : Service(registry) {}
+public:
+    [[nodiscard]] ServiceId getServiceId() const override {
+        return LibServiceId::MQTT;
+    }
 
     void setup() override {
         Service::getMessageBus()->subscribe(this);

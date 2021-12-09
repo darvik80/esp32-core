@@ -5,14 +5,14 @@
 #pragma once
 
 #include "Registry.h"
-#include "ServiceId.h"
+#include "LibServiceId.h"
 #include "ServiceMessage.h"
 
 class Service : public IService {
     IRegistry* _registry;
 public:
-    Service(ServiceId serviceId, IRegistry *registry)
-            : IService(serviceId), _registry(registry) {}
+    explicit Service(IRegistry *registry)
+            : _registry(registry) {}
 
     IRegistry* getRegistry() override {
         return _registry;

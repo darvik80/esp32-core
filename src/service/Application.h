@@ -17,14 +17,17 @@
 #include <ArduinoJson.h>
 
 class Application : public IService, public MessageSubscriber<Application, WifiConnected, WifiDisconnected, JoystickEvent> {
-    IMessageBus* _bus;
     Registry _registry;
 public:
     explicit Application(logging::level lvl, IMessageBus* bus)
-            : IService(ServiceId::APP), _registry(bus, new InCodePropertiesSource()) {
+            : _registry(bus, new InCodePropertiesSource()) {
         Serial.begin(115200);
         logging::setLogLevel(lvl);
         logging::addLogger(new logging::SerialLogger());
+    }
+
+    [[nodiscard]] ServiceId getServiceId() const override {
+        return LibServiceId::APP;
     }
 
     void setup() override {
@@ -57,7 +60,7 @@ public:
 
         logging::info("Started!");
 #ifdef OLED_SERVICE
-        getRegistry()->getService<DisplayService>(ServiceId::OLED)->setText(4, "Device is ready");
+        getRegistry()->getService<DisplayService>(LibServiceId::OLED)->setText(4, "Device is ready");
 #endif
     }
 
@@ -75,14 +78,14 @@ public:
     }
 
     IMessageBus *getMessageBus() override {
-        return _bus;
+        return _registry.getMessageBus();
     }
 
     virtual void onMessage(const WifiConnected &msg) {
         logging::info("WiFi connected: {}/{}, {}, {}", msg.ip, msg.mask, msg.gateway, msg.macAddress);
 
 #ifdef OLED_SERVICE
-        if (auto oled = getRegistry()->getService<DisplayService>(ServiceId::OLED); oled) {
+        if (auto oled = getRegistry()->getService<DisplayService>(LibServiceId::OLED); oled) {
             oled->setText(2, "WiFi connected");
             oled->setText(3, "IP: " + msg.ip);
         }
@@ -91,7 +94,7 @@ public:
 
     virtual void onMessage(const WifiDisconnected &msg) {
 #ifdef OLED_SERVICE
-        if (auto oled = getRegistry()->getService<DisplayService>(ServiceId::OLED); oled) {
+        if (auto oled = getRegistry()->getService<DisplayService>(LibServiceId::OLED); oled) {
             oled->setText(2, "WiFi disconnected");
             oled->setText(3, "");
         }
@@ -100,7 +103,7 @@ public:
 
     virtual void onMessage(const JoystickEvent &msg) {
 #ifdef OLED_SERVICE
-        if (auto oled = getRegistry()->getService<DisplayService>(ServiceId::OLED); oled) {
+        if (auto oled = getRegistry()->getService<DisplayService>(LibServiceId::OLED); oled) {
             oled->setText(0, "Joystick:");
             oled->setText(
                     1,
@@ -116,7 +119,7 @@ public:
 #endif
 
 #ifdef MQTT_SERVICE
-        if (auto mqtt = getRegistry()->getService<MqttService>(ServiceId::MQTT); mqtt) {
+        if (auto mqtt = getRegistry()->getService<MqttService>(LibServiceId::MQTT); mqtt) {
             DynamicJsonDocument  doc(1024);
             doc["leftAxisX"] = msg.leftAxis.x;
             doc["leftAxisY"] = msg.leftAxis.y;
