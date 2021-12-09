@@ -1,6 +1,11 @@
 @startuml
 'https://plantuml.com/class-diagram
 
+skinparam backgroundcolor White
+skinparam classBackgroundColor LightGray
+skinparam arrowColor DarkBlue
+skinparam classBorderColor DarkBlue
+
 enum MessageId {
     WIFI_CONNECTED,
     WIFI_DISCONNECTED,
