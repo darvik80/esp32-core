@@ -35,6 +35,11 @@ typedef std::vector<IService *> ServiceArray;
 
 class IRegistry {
 public:
+    template<typename C, typename ... T>
+    void create(T &&... all) {
+        add(new C(this, std::forward<T>(all)...));
+    }
+
     virtual void add(IService *service) = 0;
 
     virtual ServiceArray &getServices() = 0;

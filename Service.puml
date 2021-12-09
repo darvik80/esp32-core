@@ -35,6 +35,7 @@ interface IPropertiesSource {
 }
 
 interface IRegistry {
+    template<typename C, typename ... T> void create(T &&... all)
     void add(IService *service)
     ServiceArray &getServices()
     template<typename C> C *getService(ServiceId id)
