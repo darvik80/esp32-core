@@ -61,13 +61,11 @@ public:
     }
 
     void sendMessage(const IMessage &msg) override {
-        msg::log::debug("send local msg: {}", msg.getMsgId());
         onMessage(msg);
     }
 
     void sendMessage(const std::shared_ptr<IMessage> &msg) override {
         if (_queue) {
-            msg::log::debug("send msg: {}", msg->getMsgId());
             auto holder = new MessageHolder{msg};
             xQueueSendToBack(_queue, &holder, portMAX_DELAY);
         }
@@ -75,7 +73,6 @@ public:
 
     void sendMessageISR(const std::shared_ptr<IMessage> &msg) override {
         if (_queue) {
-            msg::log::debug("send msg: {}", msg->getMsgId());
             auto holder = new MessageHolder{msg};
             xQueueSendFromISR(_queue, &holder, nullptr);
         }
