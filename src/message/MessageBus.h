@@ -40,7 +40,6 @@ public:
 
     void subscribe(IMessageSubscriber *subscriber) override {
         _subscribers.emplace_back(subscriber);
-        msg::log::debug("subscribe: {}", _subscribers.size());
     }
 
     void onMessage(const IMessage &msg) override {
@@ -74,6 +73,14 @@ public:
         }
     }
 
+    void sendMessageISR(const std::shared_ptr<IMessage> &msg) override {
+        if (_queue) {
+            msg::log::debug("send msg: {}", msg->getMsgId());
+            auto holder = new MessageHolder{msg};
+            xQueueSendFromISR(_queue, &holder, nullptr);
+        }
+    }
+
     void scheduleMessage(uint32_t delay, bool repeat, const std::shared_ptr<IMessage> &msg) override {
         for (auto &timer: _timers) {
             if (timer.handler) {
@@ -85,9 +92,7 @@ public:
                 }
             }
 
-
             msg::log::debug("schedule msg: {} {}", msg->getMsgId(), delay);
-
 
             timer.msg = msg;
             timer.repeat = repeat;

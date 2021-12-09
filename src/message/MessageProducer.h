@@ -10,5 +10,6 @@ class IMessageProducer {
 public:
     virtual void sendMessage(const IMessage &msg) = 0;
     virtual void sendMessage(const IMessage::Ptr &msg) = 0;
+    virtual void sendMessageISR(const IMessage::Ptr &msg) = 0;
     virtual void scheduleMessage(uint32_t delay, bool repeat, const IMessage::Ptr &msg) = 0;
 };
