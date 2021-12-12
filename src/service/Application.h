@@ -39,10 +39,6 @@ public:
         getRegistry()->create<DisplayService>();
 #endif
 
-#ifdef JOY_SERVICE
-        getRegistry()->create<JoystickService<ADC1_CHANNEL_2, ADC1_CHANNEL_3, 0, ADC1_CHANNEL_0, ADC1_CHANNEL_1, 0>>();
-#endif
-
 #ifdef WIFI_SERVICE
         getRegistry()->create<WifiService>();
 #endif
