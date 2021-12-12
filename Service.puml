@@ -45,21 +45,21 @@ interface IRegistry {
 
 class Service {
     -IRegistry* _registry
-    IRegistry* getRegistry()
-    void setup()
-    void loop()
-    IMessageBus *getMessageBus()
+    +IRegistry* getRegistry()
+    +void setup()
+    +void loop()
+    +IMessageBus *getMessageBus()
 }
 
 IService <|-- Service
 
 class InCodePropertiesSource {
-    std::string getStr(const std::string &name, const std::string &def)
-    void setStr(const std::string &name, const std::string &value)
-    uint16_t getUint16(const std::string &name, uint16_t def)
-    void setUint16(const std::string &name, uint16_t value)
-    Property *getProperty(const std::string &name)
-    void setProperty(const std::string &name, Property* props)
+    +std::string getStr(const std::string &name, const std::string &def)
+    +void setStr(const std::string &name, const std::string &value)
+    +uint16_t getUint16(const std::string &name, uint16_t def)
+    +void setUint16(const std::string &name, uint16_t value)
+    +Property *getProperty(const std::string &name)
+    +void setProperty(const std::string &name, Property* props)
 }
 
 IPropertiesSource <|-- InCodePropertiesSource
@@ -68,10 +68,10 @@ class Registry {
     -ServiceArray _services
     -IMessageBus *_bus
     -IPropertiesSource *_props
-    void add(IService *service)
-    ServiceArray &getServices()
-    IMessageBus *getMessageBus()
-    IPropertiesSource *getProperties()
+    +void add(IService *service)
+    +ServiceArray &getServices()
+    +IMessageBus *getMessageBus()
+    +IPropertiesSource *getProperties()
 }
 
 IRegistry <|-- Registry
@@ -79,10 +79,10 @@ IRegistry <|-- Registry
 class WifiService {
     -Ticker _reconnectTimer;
     -void raiseConnect()
-    ServiceId getServiceId() const
-    {static} void onTimer(WifiService *service)
-    void setup()
-    void onWifiEvent(arduino_event_id_t event, arduino_event_info_t info)
+    +ServiceId getServiceId() const
+    +{static} void onTimer(WifiService *service)
+    +void setup()
+    +void onWifiEvent(arduino_event_id_t event, arduino_event_info_t info)
 }
 
 Service <|.. WifiService
@@ -94,16 +94,16 @@ class MQTTService {
     -std::string _password
     -std::string _host
     -uint16_t _port{}
-    ServiceId getServiceId()
-    void setup()
-    void onMessage(const char *topic, const char *payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total)
-    void onMqttConnect(bool sessionPresent)
-    void onMqttDisconnect(AsyncMqttClientDisconnectReason reason)
-    void onMqttSubscribe(uint16_t packetId, uint8_t qos)
-    void onMqttPublish(uint16_t packetId)
-    void onMessage(const WifiConnected &msg)
-    void onMessage(const WifiDisconnected &msg)
-    void publish(std::string_view topic, std::string_view data)
+    +ServiceId getServiceId()
+    +void setup()
+    +void onMessage(const char *topic, const char *payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total)
+    +void onMqttConnect(bool sessionPresent)
+    +void onMqttDisconnect(AsyncMqttClientDisconnectReason reason)
+    +void onMqttSubscribe(uint16_t packetId, uint8_t qos)
+    +void onMqttPublish(uint16_t packetId)
+    +void onMessage(const WifiConnected &msg)
+    +void onMessage(const WifiDisconnected &msg)
+    +void publish(std::string_view topic, std::string_view data)
 }
 
 Service <|.. MQTTService
@@ -112,9 +112,9 @@ class JoystickService {
     -JoystickEvent _event;
     -JoystickProperties *_props{nullptr};
 
-    ServiceId getServiceId()
-    void setup()
-    void loop()
+    +ServiceId getServiceId()
+    +void setup()
+    +void loop()
 }
 
 Service <|.. JoystickService
@@ -126,11 +126,11 @@ class DisplayService {
 
     -void refresh()
 
-    ServiceId getServiceId() const
-    void setText(int line, std::string_view text)
+    +ServiceId getServiceId() const
+    +void setText(int line, std::string_view text)
 
-    void setup()
-    void loop()
+    +void setup()
+    +void loop()
 }
 
 Service <|.. DisplayService
