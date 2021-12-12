@@ -40,7 +40,7 @@ public:
 #endif
 
 #ifdef DEBUG_SERVICES
-        getRegistry()->create < JoystickService < ADC1_CHANNEL_1, ADC1_CHANNEL_2, 4 >> ();
+        getRegistry()->create<JoystickService<ADC1_CHANNEL_1, ADC1_CHANNEL_2, 4 >>();
 #endif
 
 #ifdef WIFI_SERVICE

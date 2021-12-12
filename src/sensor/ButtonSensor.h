@@ -40,7 +40,7 @@ public:
 
     bool handleISPEvent(uint32_t event) override {
         if ((uint8_t) (event >> 24) == S_Button) {
-            this->owner()->fireEvent(ButtonEvent{(uint8_t) (event >> 8), digitalRead(pin)});
+            this->owner()->fireEvent(ButtonEvent{(uint8_t) (event >> 8), (bool)digitalRead(pin)});
             return true;
         }
 
