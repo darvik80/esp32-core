@@ -26,7 +26,7 @@ LOG_COMPONENT_SETUP(mqtt);
 #define PROP_MQTT_PASS "mqtt.pass"
 #define PROP_MQTT_CLIENT_ID "mqtt.client.id"
 
-class MqttService : public Service, public MessageSubscriber<MqttService, WifiConnected, WifiDisconnected> {
+class MqttService : public Service, public TMessageSubscriber<MqttService, WifiConnected, WifiDisconnected> {
     AsyncMqttClient _mqttClient;
 
     std::string _clientId;
