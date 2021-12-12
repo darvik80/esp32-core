@@ -47,7 +47,6 @@ public:
         }
 
         _lines[line] = text;
-        refresh();
     }
 
     void setup() override {
@@ -58,7 +57,7 @@ public:
     }
 
     void loop() override {
-        if (millis() - _lastUpdate > 1000) {
+        if (millis() - _lastUpdate > 200) {
             refresh();
             _lastUpdate = millis();
         }

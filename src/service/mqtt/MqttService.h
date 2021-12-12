@@ -26,7 +26,7 @@ LOG_COMPONENT_SETUP(mqtt);
 #define PROP_MQTT_PASS "mqtt.pass"
 #define PROP_MQTT_CLIENT_ID "mqtt.client.id"
 
-class MqttService : public Service, public MessageSubscriber<MqttService, WifiConnected, WifiDisconnected> {
+class MqttService : public Service, public TMessageSubscriber<MqttService, WifiConnected, WifiDisconnected> {
     AsyncMqttClient _mqttClient;
 
     std::string _clientId;
@@ -84,7 +84,7 @@ public:
     void onMessage(const char *topic, const char *payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total) {
         sendMessage(getMessageBus(), MqttMessage{});
 
-        mqtt::log::info("msg: {}:{}", topic, std::string(payload, len));
+        mqtt::log::debug("msg: {}:{}", topic, std::string(payload, len));
     }
 
     void onMqttConnect(bool sessionPresent) {

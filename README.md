@@ -3,11 +3,20 @@
 Simple framework for ESP32/ESP8266
 
 #Class Diagrams
-![alternative text](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/darvik80/esp-core/queue/MessageBus.puml)
+## Message Bus
+![alternative text](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/darvik80/esp-core/sensor/puml/MessageBus.puml)
 
-![alternative text](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/darvik80/esp-core/queue/Service.puml)
+## Service
+![alternative text](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/darvik80/esp-core/sensor/puml/Service.puml)
+
+## Sensor
+![alternative text](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/darvik80/esp-core/sensor/puml/Sensor.puml)
 
 ## Changelog
+
+### v0.0.2
+
+* *Sensors*
 
 ### v0.0.1
 * *Wifi Service*

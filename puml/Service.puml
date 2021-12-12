@@ -5,8 +5,6 @@ skinparam classBackgroundColor LightGray
 skinparam arrowColor DarkBlue
 skinparam classBorderColor DarkBlue
 
-title Service
-
 enum ServiceId {
     APP,
     WIFI,

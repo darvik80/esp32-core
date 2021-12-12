@@ -16,32 +16,12 @@ LOG_COMPONENT_SETUP(joy);
 
 #include "service/Service.h"
 #include "message/Message.h"
+#include "sensor/ButtonSensor.h"
+#include "sensor/AxisSensor.h"
 
-#define ADC_MAX_VAL 4096
-
-#define PROP_JOYSTICK  "prop.joy"
-
-struct JoystickProperties : Property {
-    int adcMaxVal{ADC_MAX_VAL};
-    adc_bits_width_t bitsWidth{ADC_WIDTH_BIT_12};
-    struct JoystickAxis {
-        adc1_channel_t channelX;
-        adc1_channel_t channelY;
-    };
-
-    JoystickAxis leftAxis{
-            .channelX = ADC1_CHANNEL_2,
-            .channelY= ADC1_CHANNEL_3,
-    };
-    JoystickAxis rightAxis{
-            .channelX = ADC1_CHANNEL_0,
-            .channelY= ADC1_CHANNEL_1,
-    };
-};
-
-class JoystickService : public Service {
+template<adc1_channel_t rAxisX, adc1_channel_t rAxisY = ADC1_CHANNEL_MAX, uint8_t rBtn = 0, adc1_channel_t lAxisX = ADC1_CHANNEL_MAX, adc1_channel_t lAxisY = ADC1_CHANNEL_MAX, uint8_t lBtn = 0>
+class JoystickService : public Service, public SensorContainer {
     JoystickEvent _event;
-    JoystickProperties *_props{nullptr};
 public:
     explicit JoystickService(IRegistry *registry)
             : Service(registry) {}
@@ -52,35 +32,66 @@ public:
     }
 
     void setup() override {
-        _props = getRegistry()->getProperties()->get<JoystickProperties>(PROP_JOYSTICK);
-        if (_props) {
-            adc1_config_width(_props->bitsWidth);
-            adc1_config_channel_atten(_props->leftAxis.channelX, ADC_ATTEN_DB_11);
-            adc1_config_channel_atten(_props->leftAxis.channelY, ADC_ATTEN_DB_11);
-
-            adc1_config_channel_atten(_props->rightAxis.channelX, ADC_ATTEN_DB_11);
-            adc1_config_channel_atten(_props->rightAxis.channelY, ADC_ATTEN_DB_11);
+        adc1_config_width(ADC_WIDTH_BIT_12);
+        auto axisLeft = createSensor<SensorContainer>();
+        if (lAxisX != ADC1_CHANNEL_MAX) {
+            axisLeft->createSensor<AxisSensor<lAxisX>>();
         }
+        if (lAxisY != ADC1_CHANNEL_MAX) {
+            axisLeft->createSensor<AxisSensor<lAxisY>>();
+        }
+        if (lBtn) {
+            axisLeft->createSensor<ButtonSensor<lBtn>>();
+        }
+
+        auto axisRight = createSensor<SensorContainer>();
+        if (rAxisX != ADC1_CHANNEL_MAX) {
+            axisRight->createSensor<AxisSensor<rAxisX>>();
+        }
+        if (rAxisY != ADC1_CHANNEL_MAX) {
+            axisRight->createSensor<AxisSensor<rAxisY>>();
+        }
+        if (rBtn) {
+            axisRight->createSensor<ButtonSensor<rBtn>>();
+        }
+
+        setCallback<AxisEvent>([this](const AxisEvent &event) {
+            if (lAxisX == event.channel) {
+                _event.leftAxis.x = adc1_get_raw(lAxisX);
+            } else if (lAxisY == event.channel) {
+                _event.leftAxis.y = adc1_get_raw(lAxisY);
+            } else if (rAxisX == event.channel) {
+                _event.rightAxis.x = adc1_get_raw(rAxisX);
+            } else if (rAxisY == event.channel) {
+                _event.rightAxis.y = adc1_get_raw(rAxisY);
+            }
+
+            getMessageBus()->sendMessage(_event);
+
+        });
+
+        setCallback<ButtonEvent>([this](const ButtonEvent &event) {
+            bool status = !event.state;
+            if (event.pin == lBtn) {
+                if (_event.leftAxis.btn != status) {
+                    _event.leftAxis.btn = status;
+                    getMessageBus()->sendMessage(_event);
+                }
+            } else if (event.pin == rBtn) {
+                if (_event.rightAxis.btn != status) {
+                    _event.rightAxis.btn = status;
+                    getMessageBus()->sendMessage(_event);
+                }
+            }
+        });
+
+        SensorContainer::setupSensors();
+        getMessageBus()->sendMessage(_event);
     }
 
     void loop() override {
-        if (_props) {
-            int leftX = _props->adcMaxVal - adc1_get_raw(_props->leftAxis.channelX);
-            int leftY = _props->adcMaxVal - adc1_get_raw(_props->leftAxis.channelY);
-
-            int rightX = _props->adcMaxVal - adc1_get_raw(_props->rightAxis.channelX);
-            int rightY = _props->adcMaxVal - adc1_get_raw(_props->rightAxis.channelY);
-
-            if (leftX != _event.leftAxis.x || leftY != _event.leftAxis.y || rightX != _event.rightAxis.x || rightY != _event.rightAxis.y) {
-                _event.leftAxis.x = leftX;
-                _event.leftAxis.y = leftY;
-
-                _event.rightAxis.x = rightX;
-                _event.rightAxis.y = rightY;
-
-                sendMessage(getMessageBus(), _event);
-            }
-        }
+        SensorContainer::loop();
+        Service::loop();
     }
 };
 
