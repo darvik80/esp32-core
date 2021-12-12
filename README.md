@@ -3,9 +3,14 @@
 Simple framework for ESP32/ESP8266
 
 #Class Diagrams
+## Message Bus
 ![alternative text](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/darvik80/esp-core/sensor/puml/MessageBus.puml)
 
+## Service
 ![alternative text](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/darvik80/esp-core/sensor/puml/Service.puml)
+
+## Sensor
+![alternative text](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/darvik80/esp-core/sensor/puml/Sensor.puml)
 
 ## Changelog
 

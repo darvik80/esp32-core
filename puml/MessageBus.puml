@@ -6,8 +6,6 @@ skinparam classBackgroundColor LightGray
 skinparam arrowColor DarkBlue
 skinparam classBorderColor DarkBlue
 
-title Message Bus
-
 enum MessageId {
     WIFI_CONNECTED,
     WIFI_DISCONNECTED,

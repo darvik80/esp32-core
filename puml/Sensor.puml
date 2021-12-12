@@ -15,12 +15,15 @@ interface ISensor {
     ISensorContainer *owner()
     void setup()
     void loop()
+    uint32_t getISPEvent()
+    bool handleISPEvent(uint32_t event)
 }
 
 interface ISensorContainer {
     void setupSensors()
     void loopSensors()
     void fireEvent(const ISensorEvent &event)
+    void fireEventISR(uint32_t packetEvent)
 }
 
 class TSensorEvent {
@@ -52,10 +55,44 @@ class SensorContainer {
     +void setup()
     +void loop()
     +void fireEvent(const ISensorEvent &event)
+    +void fireEventISR(uint32_t packetEvent)
     +template<typename E> void setCallback(std::function<void(const E &event)> callback)
 }
 
 
 ISensor <|.. SensorContainer
 ISensorContainer <|.. SensorContainer
+
+
+class ButtonEvent {
+    +uint8_t pin
+    +bool state
+}
+
+TSensorEvent <|.. ButtonEvent
+
+class ButtonSensor  {
+    uint16_t flags()
+    void setup()
+    uint32_t getISPEvent();
+    bool handleISPEvent(uint32_t event);
+}
+
+TSensor <|.. TSensorEvent
+
+class AxisEvent {
+    adc1_channel_t channel
+    int value
+}
+
+TSensorEvent <|.. AxisEvent
+
+class AxisSensor {
+    -int _value
+    +void setup()
+    void loop()
+}
+
+TSensor <|.. AxisSensor
+
 @enduml
