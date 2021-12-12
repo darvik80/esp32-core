@@ -56,10 +56,10 @@ public:
 
     void setup() override {
         auto axisLeft = createSensor<SensorContainer>();
-        if (lAxisX) {
+        if (lAxisX != ADC1_CHANNEL_MAX) {
             axisLeft->createSensor<AxisSensor<lAxisX>>();
         }
-        if (lAxisY) {
+        if (lAxisY != ADC1_CHANNEL_MAX) {
             axisLeft->createSensor<AxisSensor<lAxisY>>();
         }
         if (lBtn) {
@@ -67,10 +67,10 @@ public:
         }
 
         auto axisRight = createSensor<SensorContainer>();
-        if (rAxisX) {
+        if (rAxisX != ADC1_CHANNEL_MAX) {
             axisRight->createSensor<AxisSensor<rAxisX>>();
         }
-        if (rAxisY) {
+        if (rAxisY != ADC1_CHANNEL_MAX) {
             axisRight->createSensor<AxisSensor<rAxisY>>();
         }
         if (rBtn) {
