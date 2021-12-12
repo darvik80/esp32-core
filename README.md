@@ -14,6 +14,10 @@ Simple framework for ESP32/ESP8266
 
 ## Changelog
 
+### v0.0.2
+
+* *Sensors*
+
 ### v0.0.1
 * *Wifi Service*
 
