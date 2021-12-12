@@ -17,7 +17,7 @@ enum MessageId {
     USER_EVENT
 };
 
-class WifiConnected : public Message<WIFI_CONNECTED> {
+class WifiConnected : public TMessage<WIFI_CONNECTED> {
 public:
     WifiConnected(std::string_view ip, std::string_view mask, std::string_view gateway, std::string_view macAddress)
             : ip(ip), mask(mask), gateway(gateway), macAddress(macAddress) {}
@@ -28,10 +28,10 @@ public:
     std::string macAddress;
 };
 
-class WifiDisconnected : public Message<WIFI_DISCONNECTED> {
+class WifiDisconnected : public TMessage<WIFI_DISCONNECTED> {
 };
 
-struct JoystickEvent : public Message<JOYSTICK_EVENT> {
+struct JoystickEvent : public TMessage<JOYSTICK_EVENT> {
     struct Axis {
         int x{};
         int y{};
@@ -42,17 +42,17 @@ struct JoystickEvent : public Message<JOYSTICK_EVENT> {
     Axis rightAxis{};
 };
 
-struct MqttConnected : public Message<MQTT_CONNECTED> {
+struct MqttConnected : public TMessage<MQTT_CONNECTED> {
     explicit MqttConnected(std::string_view address)
             : address(address) {}
 
     std::string address;
 };
 
-struct MqttDisconnected : public Message<MQTT_DISCONNECTED> {
+struct MqttDisconnected : public TMessage<MQTT_DISCONNECTED> {
 
 };
 
-struct MqttMessage : public Message<MQTT_MESSAGE> {
+struct MqttMessage : public TMessage<MQTT_MESSAGE> {
 
 };

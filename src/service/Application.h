@@ -5,7 +5,7 @@
 #pragma once
 
 #include <service/Service.h>
-#include <message/Message.h>
+#include "message/Message.h"
 #include <message/MessageBus.h>
 
 #include "service/Config.h"
@@ -16,10 +16,10 @@
 
 #include <ArduinoJson.h>
 
-class Application : public IService, public MessageSubscriber<Application, WifiConnected, WifiDisconnected, JoystickEvent> {
+class Application : public IService, public TMessageSubscriber<Application, WifiConnected, WifiDisconnected, JoystickEvent> {
     Registry _registry;
 public:
-    explicit Application(logging::level lvl, IMessageBus* bus)
+    explicit Application(logging::level lvl, IMessageBus *bus)
             : _registry(bus, new InCodePropertiesSource()) {
         Serial.begin(115200);
         logging::setLogLevel(lvl);
@@ -40,7 +40,7 @@ public:
 #endif
 
 #ifdef JOY_SERVICE
-        getRegistry()->create<JoystickService>();
+        getRegistry()->create<JoystickService<ADC1_CHANNEL_2, ADC1_CHANNEL_3, 0, ADC1_CHANNEL_0, ADC1_CHANNEL_1, 0>>();
 #endif
 
 #ifdef WIFI_SERVICE
@@ -119,18 +119,18 @@ public:
 #endif
 
 #ifdef MQTT_SERVICE
-//        if (auto mqtt = getRegistry()->getService<MqttService>(LibServiceId::MQTT); mqtt) {
-//            DynamicJsonDocument  doc(1024);
-//            doc["leftAxisX"] = msg.leftAxis.x;
-//            doc["leftAxisY"] = msg.leftAxis.y;
-//            doc["rightAxisX"] = msg.rightAxis.x;
-//            doc["rightAxisY"] = msg.rightAxis.y;
-//            String event;
-//            serializeJson(doc, event);
-//
-//            mqtt::log::info("event: {}", event.c_str());
-//            mqtt->publish("v1/devices/me/telemetry", event.c_str());
-//        }
+        //        if (auto mqtt = getRegistry()->getService<MqttService>(LibServiceId::MQTT); mqtt) {
+        //            DynamicJsonDocument  doc(1024);
+        //            doc["leftAxisX"] = msg.leftAxis.x;
+        //            doc["leftAxisY"] = msg.leftAxis.y;
+        //            doc["rightAxisX"] = msg.rightAxis.x;
+        //            doc["rightAxisY"] = msg.rightAxis.y;
+        //            String event;
+        //            serializeJson(doc, event);
+        //
+        //            mqtt::log::info("event: {}", event.c_str());
+        //            mqtt->publish("v1/devices/me/telemetry", event.c_str());
+        //        }
 #endif
     }
 };

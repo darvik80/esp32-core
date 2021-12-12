@@ -1,0 +1,61 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+enum SensorId {
+    S_Container,
+    S_Button,
+    S_Axis
+}
+
+interface ISensorEvent {
+    virtual uint8_t type() const
+}
+
+interface ISensor {
+    ISensorContainer *owner()
+    void setup()
+    void loop()
+}
+
+interface ISensorContainer {
+    void setupSensors()
+    void loopSensors()
+    void fireEvent(const ISensorEvent &event)
+}
+
+class TSensorEvent {
+    enum {
+        TYPE
+    };
+
+    uint8_t type() const
+}
+
+ISensorEvent <|.. TSensorEvent
+
+class TSensor {
+    -ISensorContainer *_owner;
+    +ISensorContainer *owner()
+    +void setup()
+}
+
+ISensor <|.. TSensor
+
+class SensorContainer {
+    -SensorVector _sensors;
+    -CallbackVector _callbacks;
+    -ISensorContainer *_owner;
+    +template<typename C, typename ...T> C *createSensor(T &&... args)
+    +void setupSensors()
+    +void loopSensors()
+    +ISensorContainer *owner() const
+    +void setup()
+    +void loop()
+    +void fireEvent(const ISensorEvent &event)
+    +template<typename E> void setCallback(std::function<void(const E &event)> callback)
+}
+
+
+ISensor <|.. SensorContainer
+ISensorContainer <|.. SensorContainer
+@enduml

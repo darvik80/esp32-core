@@ -19,7 +19,7 @@ public:
 };
 
 template<MsgId id>
-class Message : public IMessage {
+class TMessage : public IMessage {
 public:
     enum {
         ID = id

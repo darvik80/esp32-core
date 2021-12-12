@@ -13,7 +13,7 @@ public:
 };
 
 template<typename T, typename Msg1 = void, typename Msg2 = void, typename Msg3 = void, typename Msg4 = void>
-class MessageSubscriber : public IMessageSubscriber {
+class TMessageSubscriber : public IMessageSubscriber {
 public:
     void onMessage(const IMessage &msg) override {
         switch (msg.getMsgId()) {
@@ -36,7 +36,7 @@ public:
 };
 
 template<typename T, typename Msg1, typename Msg2, typename Msg3>
-class MessageSubscriber<T, Msg1, Msg2, Msg3, void> : public IMessageSubscriber {
+class TMessageSubscriber<T, Msg1, Msg2, Msg3, void> : public IMessageSubscriber {
 public:
     void onMessage(const IMessage &msg) override {
         switch (msg.getMsgId()) {
@@ -56,7 +56,7 @@ public:
 };
 
 template<typename T, typename Msg1, typename Msg2>
-class MessageSubscriber<T, Msg1, Msg2, void, void> : public IMessageSubscriber {
+class TMessageSubscriber<T, Msg1, Msg2, void, void> : public IMessageSubscriber {
 public:
     void onMessage(const IMessage &msg) override {
         switch (msg.getMsgId()) {
@@ -73,7 +73,7 @@ public:
 };
 
 template<typename T, typename Msg1>
-class MessageSubscriber<T, Msg1, void, void, void> : public IMessageSubscriber {
+class TMessageSubscriber<T, Msg1, void, void, void> : public IMessageSubscriber {
 public:
     void onMessage(const IMessage &msg) override {
         switch (msg.getMsgId()) {

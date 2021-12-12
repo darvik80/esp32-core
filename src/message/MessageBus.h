@@ -21,11 +21,11 @@ public:
 };
 
 template<size_t queueSize = 10, size_t timerSize = 10>
-class MessageBus : public IMessageBus {
+class TMessageBus : public IMessageBus {
     struct MessageHolder {
         std::shared_ptr<IMessage> msg;
         TimerHandle_t handler{};
-        MessageBus *bus{nullptr};
+        TMessageBus *bus{nullptr};
         bool repeat{false};
     };
     std::array<MessageHolder, timerSize> _timers;
@@ -34,7 +34,7 @@ class MessageBus : public IMessageBus {
 
     std::vector<IMessageSubscriber *> _subscribers;
 public:
-    MessageBus() {
+    TMessageBus() {
         _queue = xQueueCreate(queueSize, sizeof(void *));
     }
 
@@ -103,6 +103,10 @@ public:
 
             break;
         }
+    }
+
+    virtual ~TMessageBus() {
+        vQueueDelete(_queue);
     }
 };
 
