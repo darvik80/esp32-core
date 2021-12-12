@@ -33,13 +33,10 @@ public:
 
     virtual void loop() = 0;
 
-    virtual ~ISensor() = default;
-};
+    virtual uint32_t getISPEvent() { return 0; }
+    virtual bool handleISPEvent(uint32_t event)  { return false; }
 
-class ISensorISP {
-public:
-    virtual uint32_t getISPEvent() = 0;
-    virtual bool handleISPEvent(uint32_t event) = 0;
+    virtual ~ISensor() = default;
 };
 
 class ISensorContainer {
@@ -93,13 +90,6 @@ public:
     }
 };
 
-template<typename T>
-class TSensorISP : public TSensor<T>, public ISensorISP {
-public:
-    explicit TSensorISP(ISensorContainer *owner)
-            : TSensor<T>(owner) {}
-};
-
 class SensorContainer : public ISensorContainer, public ISensor {
     struct EventHolder {
         void* event;
@@ -125,7 +115,7 @@ public:
 
     explicit SensorContainer(ISensorContainer *owner)
             : _owner(owner) {
-        _queue = xQueueCreate(10, sizeof(void *));
+        _queue = xQueueCreate(10, sizeof(uint32_t));
     }
 
     template<typename C, typename ...T>
@@ -157,12 +147,11 @@ public:
 
     void loop() override {
         if (_queue) {
-            uint32_t event;
+            uint32_t event = 0;
             while (pdPASS == xQueueReceive(_queue, &event, 0)) {
-                sensor::log::debug("recv event: {}", event);
                 for (auto& sensor : _sensors) {
                     if (sensor->flags() & SENSOR_ISP) {
-                        if (((ISensorISP*)sensor.get())->handleISPEvent(event)) {
+                        if (sensor->handleISPEvent(event)) {
                             break;
                         }
                     }

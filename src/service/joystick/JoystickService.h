@@ -19,32 +19,9 @@ LOG_COMPONENT_SETUP(joy);
 #include "sensor/ButtonSensor.h"
 #include "sensor/AxisSensor.h"
 
-#define ADC_MAX_VAL 4096
-
-#define PROP_JOYSTICK  "prop.joy"
-
-struct JoystickProperties : Property {
-    int adcMaxVal{ADC_MAX_VAL};
-    adc_bits_width_t bitsWidth{ADC_WIDTH_BIT_12};
-    struct JoystickAxis {
-        adc1_channel_t channelX;
-        adc1_channel_t channelY;
-    };
-
-    JoystickAxis leftAxis{
-            .channelX = ADC1_CHANNEL_2,
-            .channelY= ADC1_CHANNEL_3,
-    };
-    JoystickAxis rightAxis{
-            .channelX = ADC1_CHANNEL_0,
-            .channelY= ADC1_CHANNEL_1,
-    };
-};
-
-template<adc1_channel_t lAxisX, adc1_channel_t lAxisY, uint8_t lBtn, adc1_channel_t rAxisX, adc1_channel_t rAxisY, uint8_t rBtn>
+template<adc1_channel_t rAxisX, adc1_channel_t rAxisY = ADC1_CHANNEL_MAX, uint8_t rBtn = 0, adc1_channel_t lAxisX = ADC1_CHANNEL_MAX, adc1_channel_t lAxisY = ADC1_CHANNEL_MAX, uint8_t lBtn = 0>
 class JoystickService : public Service, public SensorContainer {
     JoystickEvent _event;
-    JoystickProperties *_props{nullptr};
 public:
     explicit JoystickService(IRegistry *registry)
             : Service(registry) {}
@@ -55,6 +32,7 @@ public:
     }
 
     void setup() override {
+        adc1_config_width(ADC_WIDTH_BIT_12);
         auto axisLeft = createSensor<SensorContainer>();
         if (lAxisX != ADC1_CHANNEL_MAX) {
             axisLeft->createSensor<AxisSensor<lAxisX>>();
@@ -89,21 +67,31 @@ public:
             }
 
             getMessageBus()->sendMessage(_event);
+
         });
 
         setCallback<ButtonEvent>([this](const ButtonEvent &event) {
+            bool status = !event.state;
             if (event.pin == lBtn) {
-                _event.leftAxis.btn = true;
+                if (_event.leftAxis.btn != status) {
+                    _event.leftAxis.btn = status;
+                    getMessageBus()->sendMessage(_event);
+                }
             } else if (event.pin == rBtn) {
-                _event.rightAxis.btn = true;
+                if (_event.rightAxis.btn != status) {
+                    _event.rightAxis.btn = status;
+                    getMessageBus()->sendMessage(_event);
+                }
             }
-
-            getMessageBus()->sendMessage(_event);
-
-            _event.leftAxis.btn = false;
-            _event.rightAxis.btn = false;
         });
+
         SensorContainer::setupSensors();
+        getMessageBus()->sendMessage(_event);
+    }
+
+    void loop() override {
+        SensorContainer::loop();
+        Service::loop();
     }
 };
 

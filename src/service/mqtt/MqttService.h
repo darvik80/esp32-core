@@ -84,7 +84,7 @@ public:
     void onMessage(const char *topic, const char *payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total) {
         sendMessage(getMessageBus(), MqttMessage{});
 
-        mqtt::log::info("msg: {}:{}", topic, std::string(payload, len));
+        mqtt::log::debug("msg: {}:{}", topic, std::string(payload, len));
     }
 
     void onMqttConnect(bool sessionPresent) {

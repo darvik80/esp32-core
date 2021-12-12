@@ -39,6 +39,10 @@ public:
         getRegistry()->create<DisplayService>();
 #endif
 
+#ifdef DEBUG_SERVICES
+        getRegistry()->create < JoystickService < ADC1_CHANNEL_1, ADC1_CHANNEL_2, 4 >> ();
+#endif
+
 #ifdef WIFI_SERVICE
         getRegistry()->create<WifiService>();
 #endif
@@ -104,7 +108,7 @@ public:
             oled->setText(
                     1,
                     fmt::format(
-                            "{:0^4}:{:0^4}-{:0^4}:{:0^4}",
+                            "{:04d}:{:04d}-{:04d}:{:04d}",
                             msg.leftAxis.x,
                             msg.leftAxis.y,
                             msg.rightAxis.x,
@@ -114,19 +118,21 @@ public:
         }
 #endif
 
-#ifdef MQTT_SERVICE
-        //        if (auto mqtt = getRegistry()->getService<MqttService>(LibServiceId::MQTT); mqtt) {
-        //            DynamicJsonDocument  doc(1024);
-        //            doc["leftAxisX"] = msg.leftAxis.x;
-        //            doc["leftAxisY"] = msg.leftAxis.y;
-        //            doc["rightAxisX"] = msg.rightAxis.x;
-        //            doc["rightAxisY"] = msg.rightAxis.y;
-        //            String event;
-        //            serializeJson(doc, event);
-        //
-        //            mqtt::log::info("event: {}", event.c_str());
-        //            mqtt->publish("v1/devices/me/telemetry", event.c_str());
-        //        }
+#if defined(DEBUG_SERVICES) && defined(MQTT_SERVICE)
+        if (auto mqtt = getRegistry()->getService<MqttService>(LibServiceId::MQTT); mqtt) {
+            DynamicJsonDocument doc(1024);
+            doc["leftAxisX"] = msg.leftAxis.x;
+            doc["leftAxisY"] = msg.leftAxis.y;
+            doc["leftAxisBtn"] = msg.leftAxis.btn;
+            doc["rightAxisX"] = msg.rightAxis.x;
+            doc["rightAxisY"] = msg.rightAxis.y;
+            doc["rightAxisBtn"] = msg.rightAxis.btn;
+            String event;
+            serializeJson(doc, event);
+
+            //mqtt::log::info("event: {}", event.c_str());
+            mqtt->publish("v1/devices/me/telemetry", event.c_str());
+        }
 #endif
     }
 };

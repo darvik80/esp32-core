@@ -10,18 +10,20 @@
 #include <esp32-hal-gpio.h>
 
 struct ButtonEvent : TSensorEvent<S_Button> {
-    explicit ButtonEvent(uint8_t pin) : pin(pin) {}
+    ButtonEvent(uint8_t pin, uint8_t state)
+            : pin(pin), state(state) {}
 
     uint8_t pin{};
+    bool state{};
 };
 
-void IRAM_ATTR btnHandleInterrupt(void* args);
+void IRAM_ATTR btnHandleInterrupt(void *args);
 
 template<uint8_t pin, uint8_t mode = INPUT_PULLUP>
-class ButtonSensor : public TSensorISP<ButtonEvent> {
+class ButtonSensor : public TSensor<ButtonEvent> {
 public:
     explicit ButtonSensor(ISensorContainer *owner)
-            : TSensorISP(owner) {}
+            : TSensor(owner) {}
 
     uint16_t flags() override {
         return SENSOR_ISP;
@@ -29,16 +31,16 @@ public:
 
     void setup() override {
         pinMode(pin, mode);
-        attachInterruptArg(pin, btnHandleInterrupt, this, FALLING);
+        attachInterruptArg(pin, btnHandleInterrupt, this, RISING);
     }
 
-    uint32_t getISPEvent() override {
-        return ((uint32_t)S_Button << 24) | pin;
+    IRAM_ATTR uint32_t getISPEvent() override {
+        return ((uint32_t) S_Button << 24) | (pin << 8);
     }
 
     bool handleISPEvent(uint32_t event) override {
-        if (((event&0xff000000) >> 24) == S_Button) {
-            this->owner()->fireEvent(ButtonEvent{(uint8_t)event});
+        if ((uint8_t) (event >> 24) == S_Button) {
+            this->owner()->fireEvent(ButtonEvent{(uint8_t) (event >> 8), digitalRead(pin)});
             return true;
         }
 

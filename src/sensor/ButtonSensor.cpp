@@ -3,6 +3,11 @@
 //
 #include "ButtonSensor.h"
 
-void btnHandleInterrupt(void *args) {
-    static_cast<ISensor *>(args)->owner()->fireEventISR(static_cast<ISensorISP *>(args)->getISPEvent());
+void IRAM_ATTR btnHandleInterrupt(void *args) {
+    auto sensor = static_cast<ISensor *>(args);
+    auto event = sensor->getISPEvent() ;
+    vTaskDelay(0);
+    sensor->owner()->fireEventISR(event);
+    vTaskDelay(0);
 }
+
