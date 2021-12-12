@@ -18,7 +18,7 @@ struct AxisEvent : TSensorEvent<S_Axis> {
 
 template<adc1_channel_t channel>
 class AxisSensor : public TSensor<AxisEvent> {
-    int _value{};
+    uint32_t _lastUpdate{};
 public:
     explicit AxisSensor(ISensorContainer *owner)
             : TSensor(owner) {}
@@ -28,10 +28,10 @@ public:
     }
 
     void loop() override {
-        auto value = adc1_get_raw(channel);
-        if (value != _value) {
+        if (millis()-_lastUpdate > 50) {
+            auto value = adc1_get_raw(channel);
             this->owner()->fireEvent(AxisEvent{channel, value});
-            _value = value;
+            _lastUpdate = millis();
         }
     }
 };

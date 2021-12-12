@@ -19,9 +19,38 @@ LOG_COMPONENT_SETUP(joy);
 #include "sensor/ButtonSensor.h"
 #include "sensor/AxisSensor.h"
 
+#include "esp_adc_cal.h"
+
+struct ADCAvg {
+    std::array<int, 16> buf{};
+    int idx{0};
+};
+
+
 template<adc1_channel_t rAxisX, adc1_channel_t rAxisY = ADC1_CHANNEL_MAX, uint8_t rBtn = 0, adc1_channel_t lAxisX = ADC1_CHANNEL_MAX, adc1_channel_t lAxisY = ADC1_CHANNEL_MAX, uint8_t lBtn = 0>
 class JoystickService : public Service, public SensorContainer {
     JoystickEvent _event;
+
+    uint32_t _lastUpdate{0};
+    ADCAvg rAxisXCal;
+    ADCAvg rAxisYCal;
+    ADCAvg lAxisXCal;
+    ADCAvg lAxisYCal;
+private:
+    int32_t readADC_Avg(ADCAvg &cal, int raw) {
+        cal.buf[cal.idx++] = raw;
+        if (cal.idx == cal.buf.size()) {
+            cal.idx = 0;
+        }
+
+        int sum = 0;
+        for (int val: cal.buf) {
+            sum += val;
+        }
+
+        return sum / (int) cal.buf.size();
+    }
+
 public:
     explicit JoystickService(IRegistry *registry)
             : Service(registry) {}
@@ -56,18 +85,30 @@ public:
         }
 
         setCallback<AxisEvent>([this](const AxisEvent &event) {
+            auto val = adc1_get_raw(event.channel);
+            bool updated = false;
             if (lAxisX == event.channel) {
-                _event.leftAxis.x = adc1_get_raw(lAxisX);
+                val = readADC_Avg(lAxisXCal, val);
+                updated = std::abs(_event.leftAxis.x - val) > 8;
+                _event.leftAxis.x = val;
             } else if (lAxisY == event.channel) {
-                _event.leftAxis.y = adc1_get_raw(lAxisY);
+                val = readADC_Avg(lAxisYCal, val);
+                updated = std::abs(_event.leftAxis.y - val) > 8;
+                _event.leftAxis.y = val;
             } else if (rAxisX == event.channel) {
-                _event.rightAxis.x = adc1_get_raw(rAxisX);
+                val = readADC_Avg(rAxisXCal, val);
+                updated = std::abs(_event.rightAxis.x - val) > 8;
+                _event.rightAxis.x = val;
             } else if (rAxisY == event.channel) {
-                _event.rightAxis.y = adc1_get_raw(rAxisY);
+                val = readADC_Avg(rAxisYCal, val);
+                updated = std::abs(_event.rightAxis.y - val) > 8;
+                _event.rightAxis.y = val;
             }
 
-            getMessageBus()->sendMessage(_event);
-
+            if (updated || (millis()-_lastUpdate > 1000)) {
+                getMessageBus()->sendMessage(_event);
+                _lastUpdate = millis();
+            }
         });
 
         setCallback<ButtonEvent>([this](const ButtonEvent &event) {
