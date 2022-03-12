@@ -1,5 +1,5 @@
 {
-  "name": "esp-core",
+  "name": "esp32-core",
   "version": "0.0.1",
   "description": "ESP32/ESP8266 simple framework",
   "keywords": "framework,esp32,esp8266",

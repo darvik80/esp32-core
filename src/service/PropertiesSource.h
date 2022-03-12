@@ -5,10 +5,10 @@
 #pragma once
 
 #include <string>
-#include <string_view>
 #include <cstdint>
 #include <unordered_map>
 #include <variant>
+
 
 struct Property {
     virtual ~Property() = default;
@@ -39,7 +39,8 @@ class InCodePropertiesSource : public IPropertiesSource {
     std::unordered_map<std::string, PropertyStorage> _props;
 public:
     std::string getStr(const std::string &name, const std::string &def) override {
-        if (auto iter = _props.find(name); iter != _props.end()) {
+        auto iter = _props.find(name);
+        if (iter != _props.end()) {
             return std::get<std::string>(iter->second);
         }
 
@@ -55,7 +56,8 @@ public:
     }
 
     uint16_t getUint16(const std::string &name, uint16_t def) override {
-        if (auto iter = _props.find(name); iter != _props.end()) {
+        auto iter = _props.find(name);
+        if (iter != _props.end()) {
             return std::get<uint16_t>(iter->second);
         }
 
@@ -67,7 +69,8 @@ public:
     }
 
     Property *getProperty(const std::string &name) override {
-        if (auto iter = _props.find(name); iter != _props.end()) {
+        auto iter = _props.find(name);
+        if (iter != _props.end()) {
             return std::get<Property*>(iter->second);
         }
 

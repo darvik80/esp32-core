@@ -18,7 +18,9 @@ LOG_COMPONENT_SETUP(mqtt);
 #include "message/Message.h"
 
 #include "service/Service.h"
-#include <AsyncMqttClient.hpp>
+
+#include <mqtt_client.h>
+
 
 #define PROP_MQTT_SERVER_HOST "mqtt.host"
 #define PROP_MQTT_SERVER_PORT "mqtt.port"
@@ -26,49 +28,57 @@ LOG_COMPONENT_SETUP(mqtt);
 #define PROP_MQTT_PASS "mqtt.pass"
 #define PROP_MQTT_CLIENT_ID "mqtt.client.id"
 
-class MqttService : public Service, public TMessageSubscriber<MqttService, WifiConnected, WifiDisconnected> {
-    AsyncMqttClient _mqttClient;
+class MqttService
+        : public Service, public TMessageSubscriber<MqttService, WifiConnected, MqttMessage> {
+    esp_mqtt_client_handle_t _client{};
 
     std::string _clientId;
     std::string _username;
     std::string _password;
-    std::string _host;
-    uint16_t _port{};
+    std::string _uri;
+private:
+    static void
+    mqtt_event_callback(void *event_handler_arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
+        ((MqttService *) event_handler_arg)->onEvent((esp_mqtt_event_handle_t) event_data);
+    }
 
 public:
     explicit MqttService(IRegistry *registry)
             : Service(registry) {}
-public:
+
     [[nodiscard]] ServiceId getServiceId() const override {
         return LibServiceId::MQTT;
+    }
+
+
+    void onEvent(esp_mqtt_event_handle_t event) {
+        switch (event->event_id) {
+            case MQTT_EVENT_CONNECTED:
+                esp_mqtt_client_subscribe(_client, "v1/devices/me/rpc/request/+", 1);
+                mqtt::log::info("connected");
+#if defined OLED_SERVICE
+                getRegistry()->getService<DisplayService>(LibServiceId::OLED)->setText(1, "MQTT connected");
+#endif
+                break;
+            case MQTT_EVENT_DISCONNECTED:
+                mqtt::log::info("disconnected");
+                break;
+            case MQTT_EVENT_SUBSCRIBED:
+                mqtt::log::info("subscribed");
+                break;
+            case MQTT_EVENT_ERROR:
+                mqtt::log::info("error");
+                break;
+            default:
+                break;
+
+        }
     }
 
     void setup() override {
         Service::getMessageBus()->subscribe(this);
 
-        _mqttClient.onMessage([this](auto &&PH1, auto &&PH2, auto &&PH3, auto &&PH4, auto &&PH5, auto &&PH6) {
-            onMessage(std::forward<decltype(PH1)>(PH1), std::forward<decltype(PH2)>(PH2), std::forward<decltype(PH3)>(PH3),
-                      std::forward<decltype(PH4)>(PH4), std::forward<decltype(PH5)>(PH5), std::forward<decltype(PH6)>(PH6));
-        });
-        _mqttClient.onConnect([this](auto &&PH1) { onMqttConnect(std::forward<decltype(PH1)>(PH1)); });
-        _mqttClient.onDisconnect([this](auto &&PH1) { onMqttDisconnect(std::forward<decltype(PH1)>(PH1)); });
-        _mqttClient.onSubscribe([this](auto &&PH1, auto &&PH2) {
-            onMqttSubscribe(std::forward<decltype(PH1)>(PH1), std::forward<decltype(PH2)>(PH2));
-        });
-        _mqttClient.onPublish([this](auto &&PH1) { onMqttPublish(std::forward<decltype(PH1)>(PH1)); });
-
         auto props = getRegistry()->getProperties();
-        _clientId = props->getStr(PROP_MQTT_CLIENT_ID, "");
-        _username = props->getStr(PROP_MQTT_USER, "");
-        _password = props->getStr(PROP_MQTT_PASS, "");
-        _host = props->getStr(PROP_MQTT_SERVER_HOST, "");
-        _port = props->getUint16(PROP_MQTT_SERVER_PORT, 1883);
-
-        _mqttClient.setServer(_host.c_str(), _port);
-        _mqttClient.setCredentials(_username.c_str(), _password.c_str());
-        _mqttClient.setClientId(_clientId.c_str());
-        _mqttClient.setKeepAlive(60000);
-
         mqtt::log::info(
                 "user: {}, clientId: {}",
                 props->getStr(PROP_MQTT_USER, ""),
@@ -79,51 +89,41 @@ public:
                 props->getStr(PROP_MQTT_SERVER_HOST, ""),
                 props->getUint16(PROP_MQTT_SERVER_PORT, 1883)
         );
-    }
 
-    void onMessage(const char *topic, const char *payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total) {
-        sendMessage(getMessageBus(), MqttMessage{});
-
-        mqtt::log::debug("msg: {}:{}", topic, std::string(payload, len));
-    }
-
-    void onMqttConnect(bool sessionPresent) {
-        mqtt::log::info("connected");
-        sendMessage(getMessageBus(), MqttConnected{_host+":"+std::to_string(_port)});
-
-        _mqttClient.subscribe("v1/devices/me/rpc/request/+", 1);
-    }
-
-    void onMqttDisconnect(AsyncMqttClientDisconnectReason reason) {
-        mqtt::log::info("disconnected: {}", reason);
-        sendMessage(getMessageBus(), MqttDisconnected{});
-        if (WiFi.isConnected()) {
-            _mqttClient.connect();
-        }
-    }
-
-    void onMqttSubscribe(uint16_t packetId, uint8_t qos) {
-
-    }
-
-    void onMqttPublish(uint16_t packetId) {
-
+        _clientId = props->getStr(PROP_MQTT_CLIENT_ID, "");
+        _username = props->getStr(PROP_MQTT_USER, "");
+        _password = props->getStr(PROP_MQTT_PASS, "");
+        _uri = fmt::format(
+                "mqtt://{}:{}",
+                props->getStr(PROP_MQTT_SERVER_HOST, ""),
+                props->getUint16(PROP_MQTT_SERVER_PORT, 1883)
+        );
     }
 
     void onMessage(const WifiConnected &msg) {
-        mqtt::log::info("{} start connect", _mqttClient.getClientId());
-        _mqttClient.connect();
+        mqtt::log::info("handle wifi-conn, try connect to mqtt");
+        const esp_mqtt_client_config_t config{
+                .uri = _uri.c_str(),
+                .client_id = _clientId.c_str(),
+                .username = _username.c_str(),
+                .user_context = (void *) this,
+        };
+
+        _client = esp_mqtt_client_init(&config);
+        esp_mqtt_client_register_event(_client, MQTT_EVENT_ANY, mqtt_event_callback, this);
+        esp_mqtt_client_start(_client);
+
+        getRegistry()->getService<DisplayService>(LibServiceId::OLED)->setText(1, "MQTT configured");
+
     }
 
-    void onMessage(const WifiDisconnected &msg) {
-        _mqttClient.disconnect();
+    void onMessage(const MqttMessage &msg) {
+        mqtt::log::debug("pub: {}:{}", msg.topic, msg.data);
+        publish(msg.topic, msg.data, msg.qos);
     }
 
-    void publish(std::string_view topic, std::string_view data) {
-        if (_mqttClient.connected()) {
-            mqtt::log::debug("pub: {}:{}", topic, data);
-            _mqttClient.publish(topic.data(), 0, true, data.data());
-        }
+    void publish(std::string_view topic, std::string_view data, uint8_t qos = 0) {
+        esp_mqtt_client_publish(_client, topic.data(), data.data(), (int) data.length(), qos, false);
     }
 };
 

@@ -29,12 +29,14 @@ public:
     [[nodiscard]] virtual ISensorContainer *owner() const = 0;
 
     virtual uint16_t flags() = 0;
+
     virtual void setup() = 0;
 
     virtual void loop() = 0;
 
     virtual uint32_t getISPEvent() { return 0; }
-    virtual bool handleISPEvent(uint32_t event)  { return false; }
+
+    virtual bool handleISPEvent(uint32_t event) { return false; }
 
     virtual ~ISensor() = default;
 };
@@ -46,6 +48,7 @@ public:
     virtual void loopSensors() = 0;
 
     virtual void fireEvent(const ISensorEvent &event) = 0;
+
     virtual void fireEventISR(uint32_t packetEvent) = 0;
 
     virtual ~ISensorContainer() = default;
@@ -92,7 +95,7 @@ public:
 
 class SensorContainer : public ISensorContainer, public ISensor {
     struct EventHolder {
-        void* event;
+        void *event;
     };
     typedef std::unique_ptr<ISensor> Ptr;
     typedef std::vector<Ptr> SensorVector;
@@ -149,7 +152,7 @@ public:
         if (_queue) {
             uint32_t event = 0;
             while (pdPASS == xQueueReceive(_queue, &event, 0)) {
-                for (auto& sensor : _sensors) {
+                for (auto &sensor: _sensors) {
                     if (sensor->flags() & SENSOR_ISP) {
                         if (sensor->handleISPEvent(event)) {
                             break;

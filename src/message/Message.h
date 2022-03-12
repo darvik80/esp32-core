@@ -7,19 +7,18 @@
 #include <cstdint>
 #include <vector>
 #include <string>
-#include <string_view>
 #include <memory>
 
 typedef uint_least8_t MsgId;
 
-class IMessage {
+struct IMessage {
 public:
     typedef std::shared_ptr<IMessage> Ptr;
     [[nodiscard]] virtual MsgId getMsgId() const = 0;
 };
 
 template<MsgId id>
-class TMessage : public IMessage {
+struct TMessage : IMessage {
 public:
     enum {
         ID = id

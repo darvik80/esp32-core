@@ -60,7 +60,7 @@ public:
 };
 
 class Registry : public IRegistry {
-    ServiceArray _services{USER_SERVICES};
+    ServiceArray _services{USER_SERVICES+8};
 
     IMessageBus *_bus;
     IPropertiesSource *_props;

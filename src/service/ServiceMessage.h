@@ -42,17 +42,22 @@ struct JoystickEvent : public TMessage<JOYSTICK_EVENT> {
     Axis rightAxis{};
 };
 
-struct MqttConnected : public TMessage<MQTT_CONNECTED> {
+struct MqttConnected : TMessage<MQTT_CONNECTED> {
     explicit MqttConnected(std::string_view address)
             : address(address) {}
 
     std::string address;
 };
 
-struct MqttDisconnected : public TMessage<MQTT_DISCONNECTED> {
+struct MqttMessage : TMessage<MQTT_MESSAGE> {
+    MqttMessage(std::string_view topic, std::string_view data, uint8_t qos) : topic(topic), data(data), qos(qos) {}
+    MqttMessage() = default;
 
+    std::string topic;
+    std::string data;
+    uint8_t qos{0};
 };
 
-struct MqttMessage : public TMessage<MQTT_MESSAGE> {
+struct MqttDisconnected : TMessage<MQTT_DISCONNECTED> {
 
 };
