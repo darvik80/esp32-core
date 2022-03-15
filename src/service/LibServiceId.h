@@ -7,6 +7,7 @@
 enum LibServiceId {
     APP,
     WIFI,
+    IOT,
     MQTT,
     OLED,
     JOYSTICK,

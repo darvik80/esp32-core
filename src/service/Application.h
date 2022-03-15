@@ -13,6 +13,7 @@
 #include <service/display/DisplayService.h>
 #include <service/joystick/JoystickService.h>
 #include <service/mqtt/MqttService.h>
+#include <service/iot/IotYaCoreService.h>
 
 #include <ArduinoJson.h>
 
@@ -48,6 +49,7 @@ public:
 #endif
 
 #ifdef MQTT_SERVICE
+        getRegistry()->create<IotYaCoreService>();
         getRegistry()->create<MqttService>();
 #endif
 

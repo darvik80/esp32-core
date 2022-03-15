@@ -12,7 +12,10 @@ enum MessageId {
     MQTT_CONNECTED,
     MQTT_DISCONNECTED,
     MQTT_MESSAGE,
+    MQTT_SUBSCRIBE,
     JOYSTICK_EVENT,
+    DISPLAY_TEXT,
+    SYS_MON,
 
     USER_EVENT
 };
@@ -51,6 +54,7 @@ struct MqttConnected : TMessage<MQTT_CONNECTED> {
 
 struct MqttMessage : TMessage<MQTT_MESSAGE> {
     MqttMessage(std::string_view topic, std::string_view data, uint8_t qos) : topic(topic), data(data), qos(qos) {}
+
     MqttMessage() = default;
 
     std::string topic;
@@ -58,6 +62,30 @@ struct MqttMessage : TMessage<MQTT_MESSAGE> {
     uint8_t qos{0};
 };
 
+struct MqttSubscribe : TMessage<MQTT_SUBSCRIBE> {
+    MqttSubscribe(std::string_view topic, uint8_t qos) : topic(topic), qos(qos) {}
+
+    MqttSubscribe() = default;
+
+    std::string topic;
+    uint8_t qos{0};
+};
+
 struct MqttDisconnected : TMessage<MQTT_DISCONNECTED> {
 
 };
+
+struct DisplayText : TMessage<DISPLAY_TEXT> {
+    DisplayText(int line, const std::string_view &text) : line(line), text(text) {}
+
+    DisplayText() = default;
+
+    int line{};
+    std::string_view text;
+};
+
+
+struct SystemMonitoringEvent : TMessage<SYS_MON> {
+    float cpuTemp{};
+};
+

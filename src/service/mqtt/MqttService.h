@@ -18,24 +18,19 @@ LOG_COMPONENT_SETUP(mqtt);
 #include "message/Message.h"
 
 #include "service/Service.h"
+#include "MqttProperties.h"
 
 #include <mqtt_client.h>
+#include <esp_tls.h>
+#include <esp_crt_bundle.h>
 
-
-#define PROP_MQTT_SERVER_HOST "mqtt.host"
-#define PROP_MQTT_SERVER_PORT "mqtt.port"
-#define PROP_MQTT_USER "mqtt.user"
-#define PROP_MQTT_PASS "mqtt.pass"
-#define PROP_MQTT_CLIENT_ID "mqtt.client.id"
+#define PROP_MQTT_PROPS "mqtt.props"
 
 class MqttService
-        : public Service, public TMessageSubscriber<MqttService, WifiConnected, MqttMessage> {
+        : public Service, public TMessageSubscriber<MqttService, WifiConnected, MqttMessage, MqttSubscribe> {
     esp_mqtt_client_handle_t _client{};
 
-    std::string _clientId;
-    std::string _username;
-    std::string _password;
-    std::string _uri;
+    MqttProperties *_props{};
 private:
     static void
     mqtt_event_callback(void *event_handler_arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
@@ -50,15 +45,14 @@ public:
         return LibServiceId::MQTT;
     }
 
-
     void onEvent(esp_mqtt_event_handle_t event) {
         switch (event->event_id) {
-            case MQTT_EVENT_CONNECTED:
-                esp_mqtt_client_subscribe(_client, "v1/devices/me/rpc/request/+", 1);
+            case MQTT_EVENT_CONNECTED: {
                 mqtt::log::info("connected");
 #if defined OLED_SERVICE
                 getRegistry()->getService<DisplayService>(LibServiceId::OLED)->setText(1, "MQTT connected");
 #endif
+            }
                 break;
             case MQTT_EVENT_DISCONNECTED:
                 mqtt::log::info("disconnected");
@@ -66,8 +60,14 @@ public:
             case MQTT_EVENT_SUBSCRIBED:
                 mqtt::log::info("subscribed");
                 break;
+            case MQTT_EVENT_PUBLISHED:
+                mqtt::log::info("pub-ack: {}", event->msg_id);
+                break;
             case MQTT_EVENT_ERROR:
                 mqtt::log::info("error");
+                break;
+            case MQTT_EVENT_DATA:
+                mqtt::log::info("data: {}:{}", event->topic, std::string(event->data, event->data_len));
                 break;
             default:
                 break;
@@ -78,35 +78,38 @@ public:
     void setup() override {
         Service::getMessageBus()->subscribe(this);
 
-        auto props = getRegistry()->getProperties();
+        _props = getRegistry()->getProperties()->get<MqttProperties>(PROP_MQTT_PROPS);
         mqtt::log::info(
                 "user: {}, clientId: {}",
-                props->getStr(PROP_MQTT_USER, ""),
-                props->getStr(PROP_MQTT_CLIENT_ID, "")
+                _props->username,
+                _props->clientId
         );
         mqtt::log::info(
-                "server: {}:{}",
-                props->getStr(PROP_MQTT_SERVER_HOST, ""),
-                props->getUint16(PROP_MQTT_SERVER_PORT, 1883)
+                "server: {}",
+                _props->uri
         );
 
-        _clientId = props->getStr(PROP_MQTT_CLIENT_ID, "");
-        _username = props->getStr(PROP_MQTT_USER, "");
-        _password = props->getStr(PROP_MQTT_PASS, "");
-        _uri = fmt::format(
-                "mqtt://{}:{}",
-                props->getStr(PROP_MQTT_SERVER_HOST, ""),
-                props->getUint16(PROP_MQTT_SERVER_PORT, 1883)
-        );
+        if (_props->rootCa != nullptr) {
+            if (ESP_OK != esp_tls_init_global_ca_store()) {
+                logging::error("can't inti global store");
+            } else if (ESP_OK != esp_tls_set_global_ca_store((const unsigned char *) _props->rootCa,
+                                                             strlen(_props->rootCa) + 1)) {
+                logging::error("can't inti global store cert");
+            }
+        }
     }
 
     void onMessage(const WifiConnected &msg) {
         mqtt::log::info("handle wifi-conn, try connect to mqtt");
         const esp_mqtt_client_config_t config{
-                .uri = _uri.c_str(),
-                .client_id = _clientId.c_str(),
-                .username = _username.c_str(),
+                .uri = _props->uri.c_str(),
+                .client_id = _props->clientId.c_str(),
+                .username = _props->username.c_str(),
+                .password = _props->password.c_str(),
                 .user_context = (void *) this,
+                .cert_pem = _props->certDev,
+                .use_global_ca_store = _props->rootCa != nullptr,
+                .reconnect_timeout_ms = 10000
         };
 
         _client = esp_mqtt_client_init(&config);
@@ -114,16 +117,31 @@ public:
         esp_mqtt_client_start(_client);
 
         getRegistry()->getService<DisplayService>(LibServiceId::OLED)->setText(1, "MQTT configured");
-
     }
 
     void onMessage(const MqttMessage &msg) {
-        mqtt::log::debug("pub: {}:{}", msg.topic, msg.data);
         publish(msg.topic, msg.data, msg.qos);
     }
 
+    void onMessage(const MqttSubscribe &msg) {
+        subscribe(msg.topic, msg.qos);
+    }
+
+    void subscribe(std::string_view topic, uint8_t qos = 0) {
+        mqtt::log::debug("sub: {}:{}", topic);
+        if (auto id = esp_mqtt_client_subscribe(_client, topic.data(), qos); id > 0) {
+            mqtt::log::info("sub: {}:{}", topic, id);
+        } else {
+            mqtt::log::error("sub failed: {}", topic);
+        }
+    }
     void publish(std::string_view topic, std::string_view data, uint8_t qos = 0) {
-        esp_mqtt_client_publish(_client, topic.data(), data.data(), (int) data.length(), qos, false);
+        mqtt::log::debug("pub: {}:{}", topic, data);
+        if (auto id = esp_mqtt_client_publish(_client, topic.data(), data.data(), (int) data.length(), qos, false); id > 0) {
+            mqtt::log::info("sent: {}:{}", topic, id);
+        } else {
+            mqtt::log::error("send failed: {}", topic);
+        }
     }
 };
 

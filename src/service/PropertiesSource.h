@@ -9,12 +9,12 @@
 #include <unordered_map>
 #include <variant>
 
-
-struct Property {
-    virtual ~Property() = default;
-};
+typedef void* PropertyPtr;
 
 class IPropertiesSource {
+protected:
+    virtual PropertyPtr getProperty(const std::string &name) = 0;
+
 public:
     virtual std::string getStr(const std::string &name, const std::string &def) = 0;
 
@@ -24,8 +24,7 @@ public:
 
     virtual void setUint16(const std::string &name, uint16_t value) = 0;
 
-    virtual Property *getProperty(const std::string &name) = 0;
-    virtual void setProperty(const std::string &name, Property* props) = 0;
+    virtual void setProperty(const std::string &name, PropertyPtr props) = 0;
 
     template<class T>
     T *get(const std::string &name) {
@@ -33,9 +32,8 @@ public:
     }
 };
 
-
 class InCodePropertiesSource : public IPropertiesSource {
-    typedef std::variant<std::string, uint16_t, Property*> PropertyStorage;
+    typedef std::variant<std::string, uint16_t, PropertyPtr> PropertyStorage;
     std::unordered_map<std::string, PropertyStorage> _props;
 public:
     std::string getStr(const std::string &name, const std::string &def) override {
@@ -64,14 +62,15 @@ public:
         return def;
     }
 
-    void setProperty(const std::string &name, Property* props)  override {
+    void setProperty(const std::string &name, PropertyPtr props) override {
         _props.emplace(name, props);
     }
 
-    Property *getProperty(const std::string &name) override {
+protected:
+    PropertyPtr getProperty(const std::string &name) override {
         auto iter = _props.find(name);
         if (iter != _props.end()) {
-            return std::get<Property*>(iter->second);
+            return std::get<PropertyPtr>(iter->second);
         }
 
         return nullptr;
