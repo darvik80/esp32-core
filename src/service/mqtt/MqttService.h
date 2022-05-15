@@ -6,8 +6,6 @@
 
 #include "service/Config.h"
 
-#ifdef MQTT_SERVICE
-
 #include "logging/Logging.h"
 
 LOG_COMPONENT_SETUP(mqtt);
@@ -27,7 +25,8 @@ LOG_COMPONENT_SETUP(mqtt);
 #define PROP_MQTT_PROPS "mqtt.props"
 
 class MqttService
-        : public Service, public TMessageSubscriber<MqttService, WifiConnected, MqttMessage, MqttSubscribe> {
+        : public TService<Service_MQTT>,
+          public TMessageSubscriber<MqttService, WifiConnected, MqttMessage, MqttSubscribe> {
     esp_mqtt_client_handle_t _client{};
 
     MqttProperties *_props{};
@@ -38,47 +37,37 @@ private:
     }
 
 public:
-    explicit MqttService(IRegistry *registry)
-            : Service(registry) {}
-
-    [[nodiscard]] ServiceId getServiceId() const override {
-        return LibServiceId::MQTT;
-    }
-
     void onEvent(esp_mqtt_event_handle_t event) {
         switch (event->event_id) {
             case MQTT_EVENT_CONNECTED: {
                 mqtt::log::info("connected");
-#if defined OLED_SERVICE
-                getRegistry()->getService<DisplayService>(LibServiceId::OLED)->setText(1, "MQTT connected");
-#endif
-            }
                 break;
-            case MQTT_EVENT_DISCONNECTED:
-                mqtt::log::info("disconnected");
+                case MQTT_EVENT_DISCONNECTED:
+                    mqtt::log::info("disconnected");
                 break;
-            case MQTT_EVENT_SUBSCRIBED:
-                mqtt::log::info("subscribed");
+                case MQTT_EVENT_SUBSCRIBED:
+                    mqtt::log::info("subscribed");
                 break;
-            case MQTT_EVENT_PUBLISHED:
-                mqtt::log::info("pub-ack: {}", event->msg_id);
+                case MQTT_EVENT_PUBLISHED:
+                    mqtt::log::info("pub-ack: {}", event->msg_id);
                 break;
-            case MQTT_EVENT_ERROR:
-                mqtt::log::info("error");
+                case MQTT_EVENT_ERROR:
+                    mqtt::log::info("error");
                 break;
-            case MQTT_EVENT_DATA:
-                mqtt::log::info("data: {}:{}", event->topic, std::string(event->data, event->data_len));
+                case MQTT_EVENT_DATA:
+                    mqtt::log::info("data: {}:{}", event->topic, std::string(event->data, event->data_len));
                 break;
-            default:
-                break;
+                default:
+                    break;
 
+            }
         }
     }
 
-    void setup() override {
-        Service::getMessageBus()->subscribe(this);
+    void setup(Registry &registry) override {
+        registry.getMessageBus().subscribe(this);
 
-        _props = getRegistry()->getProperties()->get<MqttProperties>(PROP_MQTT_PROPS);
+        _props = registry.getProperties().get<MqttProperties>(PROP_MQTT_PROPS);
         mqtt::log::info(
                 "user: {}, clientId: {}",
                 _props->username,
@@ -115,8 +104,6 @@ public:
         _client = esp_mqtt_client_init(&config);
         esp_mqtt_client_register_event(_client, MQTT_EVENT_ANY, mqtt_event_callback, this);
         esp_mqtt_client_start(_client);
-
-        getRegistry()->getService<DisplayService>(LibServiceId::OLED)->setText(1, "MQTT configured");
     }
 
     void onMessage(const MqttMessage &msg) {
@@ -135,14 +122,14 @@ public:
             mqtt::log::error("sub failed: {}", topic);
         }
     }
+
     void publish(std::string_view topic, std::string_view data, uint8_t qos = 0) {
         mqtt::log::debug("pub: {}:{}", topic, data);
-        if (auto id = esp_mqtt_client_publish(_client, topic.data(), data.data(), (int) data.length(), qos, false); id > 0) {
+        if (auto id = esp_mqtt_client_publish(_client, topic.data(), data.data(), (int) data.length(), qos, false);
+                id > 0) {
             mqtt::log::info("sent: {}:{}", topic, id);
         } else {
             mqtt::log::error("send failed: {}", topic);
         }
     }
 };
-
-#endif

@@ -7,13 +7,18 @@
 
 #include <string_view>
 
-class IotService : public Service {
-public:
-    explicit IotService(IRegistry *registry) : Service(registry) {}
+#include "service/Service.h"
 
-    [[nodiscard]] ServiceId getServiceId() const override {
-        return IOT;
+class IotService : public TService<Service_IoT>, public TMessageSubscriber<IotService, MqttConnected, IoTTelemetry, IoTCommand> {
+public:
+    MessageBus *_bus{};
+public:
+    void setup(Registry &registry) override {
+        _bus = &registry.getMessageBus();
+        registry.getMessageBus().subscribe(this);
     }
-    virtual void telemetry(std::string_view data) = 0;
-    virtual void command(std::string_view cmd, std::string_view data) = 0;
+
+    virtual void onMessage(const MqttConnected& event) = 0;
+    virtual void onMessage(const IoTTelemetry& event) = 0;
+    virtual void onMessage(const IoTCommand& event) = 0;
 };

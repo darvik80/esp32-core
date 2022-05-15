@@ -6,8 +6,8 @@ Simple framework for ESP32/ESP8266
 ## Message Bus
 ![alternative text](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/darvik80/esp-core/sensor/puml/MessageBus.puml)
 
-## Service
-![alternative text](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/darvik80/esp-core/sensor/puml/Service.puml)
+## TService
+![alternative text](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/darvik80/esp-core/sensor/puml/TService.puml)
 
 ## Sensor
 ![alternative text](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/darvik80/esp-core/sensor/puml/Sensor.puml)
@@ -19,9 +19,9 @@ Simple framework for ESP32/ESP8266
 * *Sensors*
 
 ### v0.0.1
-* *Wifi Service*
+* *Wifi TService*
 
-Service for connect to Wifi. Support auto-reconnect
+TService for connect to Wifi. Support auto-reconnect
 ```cpp
 #define PROP_WIFI_SSID "wifi.ssid"
 #define PROP_WIFI_PASS "wifi.pass"
@@ -30,7 +30,7 @@ Generate 2 events:
 1. WifiConnected
 2. WifiDisconnected
 
-* *MQTT Service*
+* *MQTT TService*
 
 Integration with MQTT.
 
@@ -46,11 +46,11 @@ Generate 3 events:
 2. MqttDisconnected
 3. MqttMessage
 
-* *Display Service* 
+* *Display TService* 
 
-Service for work with OLED display via SDA/SCL
+TService for work with OLED display via SDA/SCL
 
-* *Joystick Service*
+* *Joystick TService*
 ```cpp
 struct JoystickProperties : Property {
     int adcMaxVal{ADC_MAX_VAL};

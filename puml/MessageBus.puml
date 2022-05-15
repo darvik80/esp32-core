@@ -15,7 +15,7 @@ enum MessageId {
     JOYSTICK_EVENT,
 }
 
-interface IMessage {
+interface Message {
     MsgId getMsgId() const
 }
 
@@ -28,47 +28,47 @@ class WifiConnected {
     MsgId getMsgId() const
 }
 
-WifiConnected <|.. IMessage
+WifiConnected <|.. Message
 
 class WifiDisconnected {
     +MsgId getMsgId() const
 }
 
-WifiDisconnected <|.. IMessage
+WifiDisconnected <|.. Message
 
 class MQTTConnected {
     +std::string address
     +MsgId getMsgId() const
 }
 
-MQTTConnected <|.. IMessage
+MQTTConnected <|.. Message
 
 class MQTTDisconnected {
     +MsgId getMsgId() const
 }
 
-MQTTDisconnected <|.. IMessage
+MQTTDisconnected <|.. Message
 
 interface IMessageSubscriber {
-    void onMessage(const IMessage &msg)
+    void onMessage(const Message &msg)
 }
 
 interface IMessageProducer {
-    void sendMessage(const IMessage &msg)
-    void sendMessage(const std::shared_ptr<IMessage> &msg)
-    void scheduleMessage(uint32_t delay, bool repeat, const std::shared_ptr<IMessage> &msg)
+    void sendMessage(const Message &msg)
+    void sendMessage(const std::shared_ptr<Message> &msg)
+    void scheduleMessage(uint32_t delay, bool repeat, const std::shared_ptr<Message> &msg)
 }
 
-interface IMessageBus {
+interface MessageBus {
     void subscribe(IMessageSubscriber *subscriber)
     void loop()
 }
 
-IMessageProducer <|-- IMessageBus
-IMessageSubscriber <|-- IMessageBus
+IMessageProducer <|-- MessageBus
+IMessageSubscriber <|-- MessageBus
 
 class MessageSubscriber {
-    +void onMessage(const IMessage &msg)
+    +void onMessage(const Message &msg)
 }
 
 IMessageSubscriber <|.. MessageSubscriber
@@ -77,15 +77,15 @@ class MessageBus {
     +void subscribe(IMessageSubscriber *subscriber)
     +void loop()
 
-    +void onMessage(const IMessage &msg)
+    +void onMessage(const Message &msg)
 
-    +void sendMessage(const IMessage &msg)
-    +void sendMessage(const std::shared_ptr<IMessage> &msg)
-    +void scheduleMessage(uint32_t delay, bool repeat, const std::shared_ptr<IMessage> &msg)
+    +void sendMessage(const Message &msg)
+    +void sendMessage(const std::shared_ptr<Message> &msg)
+    +void scheduleMessage(uint32_t delay, bool repeat, const std::shared_ptr<Message> &msg)
 }
 
-IMessageBus <|.. MessageBus
+MessageBus <|.. MessageBus
 
-IMessage --d[hidden]-> IMessageBus
+Message --d[hidden]-> MessageBus
 
 @enduml

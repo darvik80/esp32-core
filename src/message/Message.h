@@ -11,14 +11,14 @@
 
 typedef uint_least8_t MsgId;
 
-struct IMessage {
+struct Message {
 public:
-    typedef std::shared_ptr<IMessage> Ptr;
+    typedef std::shared_ptr<Message> Ptr;
     [[nodiscard]] virtual MsgId getMsgId() const = 0;
 };
 
 template<MsgId id>
-struct TMessage : IMessage {
+struct TMessage : Message {
 public:
     enum {
         ID = id

@@ -9,13 +9,13 @@
 
 class IMessageSubscriber {
 public:
-    virtual void onMessage(const IMessage &msg) = 0;
+    virtual void onMessage(const Message &msg) = 0;
 };
 
 template<typename T, typename Msg1 = void, typename Msg2 = void, typename Msg3 = void, typename Msg4 = void>
 class TMessageSubscriber : public IMessageSubscriber {
 public:
-    void onMessage(const IMessage &msg) override {
+    void onMessage(const Message &msg) override {
         switch (msg.getMsgId()) {
             case Msg1::ID:
                 static_cast<T *>(this)->onMessage(static_cast<const Msg1 &>(msg));
@@ -38,7 +38,7 @@ public:
 template<typename T, typename Msg1, typename Msg2, typename Msg3>
 class TMessageSubscriber<T, Msg1, Msg2, Msg3, void> : public IMessageSubscriber {
 public:
-    void onMessage(const IMessage &msg) override {
+    void onMessage(const Message &msg) override {
         switch (msg.getMsgId()) {
             case Msg1::ID:
                 static_cast<T *>(this)->onMessage(static_cast<const Msg1 &>(msg));
@@ -58,7 +58,7 @@ public:
 template<typename T, typename Msg1, typename Msg2>
 class TMessageSubscriber<T, Msg1, Msg2, void, void> : public IMessageSubscriber {
 public:
-    void onMessage(const IMessage &msg) override {
+    void onMessage(const Message &msg) override {
         switch (msg.getMsgId()) {
             case Msg1::ID:
                 static_cast<T *>(this)->onMessage(static_cast<const Msg1 &>(msg));
@@ -75,7 +75,7 @@ public:
 template<typename T, typename Msg1>
 class TMessageSubscriber<T, Msg1, void, void, void> : public IMessageSubscriber {
 public:
-    void onMessage(const IMessage &msg) override {
+    void onMessage(const Message &msg) override {
         switch (msg.getMsgId()) {
             case Msg1::ID:
                 static_cast<T *>(this)->onMessage(static_cast<const Msg1 &>(msg));

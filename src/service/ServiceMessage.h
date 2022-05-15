@@ -17,6 +17,9 @@ enum MessageId {
     DISPLAY_TEXT,
     SYS_MON,
 
+    IOT_TELEMETRY,
+    IOT_COMMAND,
+
     USER_EVENT
 };
 
@@ -89,3 +92,13 @@ struct SystemMonitoringEvent : TMessage<SYS_MON> {
     float cpuTemp{};
 };
 
+struct IoTTelemetry : TMessage<IOT_TELEMETRY> {
+    explicit IoTTelemetry(std::string_view data) : data(data) {}
+
+    std::string_view data;
+};
+
+struct IoTCommand : TMessage<IOT_COMMAND> {
+    std::string_view cmd;
+    std::string_view data;
+};

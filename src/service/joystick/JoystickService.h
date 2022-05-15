@@ -14,7 +14,7 @@ LOG_COMPONENT_SETUP(joy);
 
 #include <driver/adc.h>
 
-#include "service/Service.h"
+#include "service/TService.h"
 #include "message/Message.h"
 #include "sensor/ButtonSensor.h"
 #include "sensor/AxisSensor.h"
@@ -28,7 +28,7 @@ struct ADCAvg {
 
 
 template<adc1_channel_t rAxisX, adc1_channel_t rAxisY = ADC1_CHANNEL_MAX, uint8_t rBtn = 0, adc1_channel_t lAxisX = ADC1_CHANNEL_MAX, adc1_channel_t lAxisY = ADC1_CHANNEL_MAX, uint8_t lBtn = 0>
-class JoystickService : public Service, public SensorContainer {
+class JoystickService : public TService, public SensorContainer {
     JoystickEvent _event;
 
     uint32_t _lastUpdate{0};
@@ -52,8 +52,8 @@ private:
     }
 
 public:
-    explicit JoystickService(IRegistry *registry)
-            : Service(registry) {}
+    explicit JoystickService(Registry *registry)
+            : TService(registry) {}
 
 
     [[nodiscard]] ServiceId getServiceId() const override {
@@ -132,7 +132,7 @@ public:
 
     void loop() override {
         SensorContainer::loop();
-        Service::loop();
+        TService::loop();
     }
 };
 

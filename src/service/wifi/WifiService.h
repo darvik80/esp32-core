@@ -6,65 +6,50 @@
 
 #include "service/Config.h"
 
-#ifdef WIFI_SERVICE
-
 #include "logging/Logging.h"
 
 LOG_COMPONENT_SETUP(wifi);
 
 #include "service/Service.h"
-#include <Ticker.h>
+#include "system/Timer.h"
 #include <WiFi.h>
 
 #define PROP_WIFI_SSID "wifi.ssid"
 #define PROP_WIFI_PASS "wifi.pass"
 
-class WifiService : public Service {
-    Ticker _reconnectTimer;
+class WifiService : public TService<Service_WIFI> {
 private:
-    void raiseConnect() {
-        auto props = getRegistry()->getProperties();
+    void raiseConnect(Registry &registry) {
+        auto& props = registry.getProperties();
         WiFi.begin(
-                props->getStr(PROP_WIFI_SSID, "").c_str(),
-                props->getStr(PROP_WIFI_PASS, "").c_str()
+                props.getStr(PROP_WIFI_SSID, "").c_str(),
+                props.getStr(PROP_WIFI_PASS, "").c_str()
         );
 
-        wifi::log::info("init connection: {}", props->getStr(PROP_WIFI_SSID, ""));
-
+        wifi::log::info("init connection: {}", props.getStr(PROP_WIFI_SSID, ""));
     }
+
 public:
-    explicit WifiService(IRegistry *registry)
-            : Service(registry) {}
-
-    [[nodiscard]] ServiceId getServiceId() const override {
-        return LibServiceId::WIFI;
-    }
-
-    static void onTimer(WifiService *service) {
-        service->raiseConnect();
-    }
-
-    void setup() override {
-        Service::setup();
-
-        WiFi.onEvent([this](arduino_event_id_t event, arduino_event_info_t info) {
-            onWifiEvent(event, info);
+    void setup(Registry &registry) override {
+        WiFi.setAutoReconnect(false);
+        WiFi.onEvent([this, &registry](arduino_event_id_t event, arduino_event_info_t info) {
+            onWifiEvent(registry, event, info);
         }, ARDUINO_EVENT_WIFI_STA_GOT_IP);
 
-        WiFi.onEvent([this](arduino_event_id_t event, arduino_event_info_t info) {
-            onWifiEvent(event, info);
+        WiFi.onEvent([this, &registry](arduino_event_id_t event, arduino_event_info_t info) {
+            onWifiEvent(registry, event, info);
         }, ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
 
-        raiseConnect();
+        raiseConnect(registry);
     }
 
-    void onWifiEvent(arduino_event_id_t event, arduino_event_info_t info) {
+    void onWifiEvent(Registry &registry, arduino_event_id_t event, arduino_event_info_t info) {
         switch (event) {
             case ARDUINO_EVENT_WIFI_STA_GOT_IP:
                 wifi::log::info("WiFi connected");
                 wifi::log::info("Got IP address: {}", WiFi.localIP().toString().c_str());
                 sendMessage(
-                        Service::getMessageBus(),
+                        registry.getMessageBus(),
                         std::make_shared<WifiConnected>(
                                 WiFi.localIP().toString().c_str(),
                                 WiFi.subnetMask().toString().c_str(),
@@ -75,13 +60,15 @@ public:
                 break;
             case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
                 wifi::log::info("WiFi lost connection");
-                _reconnectTimer.once_ms(2000, onTimer, this);
-                sendMessage(Service::getMessageBus(), WifiDisconnected{});
+
+                schedule(registry.getMessageBus(), 5000, false, [&registry, this]() {
+                    raiseConnect(registry);
+                });
+
+                sendMessage(registry.getMessageBus(), WifiDisconnected{});
                 break;
             default:
                 break;
         }
     }
 };
-
-#endif

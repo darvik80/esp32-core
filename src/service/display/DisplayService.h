@@ -6,15 +6,13 @@
 
 #include "service/Config.h"
 
-#ifdef OLED_SERVICE
-
 #include "service/Service.h"
 #include <U8g2lib.h>
 #include <array>
 #include <memory>
 #include <pins_arduino.h>
 
-class DisplayService : public Service , public TMessageSubscriber<DisplayService, DisplayText>{
+class DisplayService : public TService<Service_Display> , public TMessageSubscriber<DisplayService, DisplayText>{
     std::unique_ptr<U8G2> _display;
     unsigned long _lastUpdate{0};
     std::array<std::string, 5> _lines;
@@ -33,14 +31,6 @@ private:
     }
 
 public:
-    explicit DisplayService(IRegistry *registry)
-            : Service(registry) {
-    }
-
-    [[nodiscard]] ServiceId getServiceId() const override {
-        return LibServiceId::OLED;
-    }
-
     void setText(int line, std::string_view text) {
         if (line >= _lines.size()) {
             return;
@@ -49,15 +39,14 @@ public:
         _lines[line] = text;
     }
 
-    void setup() override {
-        Service::setup();
-        Service::getMessageBus()->subscribe(this);
+    void setup(Registry& registry) override {
+        registry.getMessageBus().subscribe(this);
 
         _display = std::make_unique<U8G2_SSD1306_128X64_NONAME_1_SW_I2C>(U8G2_R0, SCL, SDA);
         _display->begin();
     }
 
-    void loop() override {
+    void loop(Registry& registry) override {
         if (millis() - _lastUpdate > 200) {
             refresh();
             _lastUpdate = millis();
@@ -68,5 +57,3 @@ public:
         setText(msg.line, msg.text);
     }
 };
-
-#endif

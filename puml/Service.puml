@@ -14,15 +14,15 @@ enum ServiceId {
     MAX_ID
 }
 
-interface IService {
+interface Service {
     ServiceId getServiceId()
     void setup()
     void loop()
-    IRegistry *getRegistry()
-    IMessageBus *getMessageBus()
+    Registry *getRegistry()
+    MessageBus *getMessageBus()
 }
 
-interface IPropertiesSource {
+interface PropertiesSource {
     std::string getStr(const std::string &name, const std::string &def)
     void setStr(const std::string &name, const std::string &value)
     uint16_t getUint16(const std::string &name, uint16_t def)
@@ -32,24 +32,24 @@ interface IPropertiesSource {
     template<class T> T *get(const std::string &name)
 }
 
-interface IRegistry {
+interface Registry {
     template<typename C, typename ... T> void create(T &&... all)
-    void add(IService *service)
+    void add(Service *service)
     ServiceArray &getServices()
     template<typename C> C *getService(ServiceId id)
-    IMessageBus *getMessageBus()
-    IPropertiesSource *getProperties()
+    MessageBus *getMessageBus()
+    PropertiesSource *getProperties()
 }
 
-class Service {
-    -IRegistry* _registry
-    +IRegistry* getRegistry()
+class TService {
+    -Registry* _registry
+    +Registry* getRegistry()
     +void setup()
     +void loop()
-    +IMessageBus *getMessageBus()
+    +MessageBus *getMessageBus()
 }
 
-IService <|-- Service
+Service <|-- TService
 
 class InCodePropertiesSource {
     +std::string getStr(const std::string &name, const std::string &def)
@@ -60,19 +60,19 @@ class InCodePropertiesSource {
     +void setProperty(const std::string &name, Property* props)
 }
 
-IPropertiesSource <|-- InCodePropertiesSource
+PropertiesSource <|-- InCodePropertiesSource
 
-class Registry {
+class SimpleRegistry {
     -ServiceArray _services
-    -IMessageBus *_bus
-    -IPropertiesSource *_props
-    +void add(IService *service)
+    -MessageBus *_bus
+    -PropertiesSource *_props
+    +void add(Service *service)
     +ServiceArray &getServices()
-    +IMessageBus *getMessageBus()
-    +IPropertiesSource *getProperties()
+    +MessageBus *getMessageBus()
+    +PropertiesSource *getProperties()
 }
 
-IRegistry <|-- Registry
+Registry <|-- SimpleRegistry
 
 class WifiService {
     -Ticker _reconnectTimer;
@@ -83,7 +83,7 @@ class WifiService {
     +void onWifiEvent(arduino_event_id_t event, arduino_event_info_t info)
 }
 
-Service <|.. WifiService
+TService <|.. WifiService
 
 class MQTTService {
     -AsyncMqttClient _mqttClient
@@ -104,7 +104,7 @@ class MQTTService {
     +void publish(std::string_view topic, std::string_view data)
 }
 
-Service <|.. MQTTService
+TService <|.. MQTTService
 
 class JoystickService {
     -JoystickEvent _event;
@@ -115,7 +115,7 @@ class JoystickService {
     +void loop()
 }
 
-Service <|.. JoystickService
+TService <|.. JoystickService
 
 class DisplayService {
     -std::unique_ptr<U8G2> _display;
@@ -131,9 +131,9 @@ class DisplayService {
     +void loop()
 }
 
-Service <|.. DisplayService
+TService <|.. DisplayService
 
-IPropertiesSource --r[hidden]-> IService
-ServiceId --r[hidden]-> IService
+PropertiesSource --r[hidden]-> Service
+ServiceId --r[hidden]-> Service
 
 @enduml

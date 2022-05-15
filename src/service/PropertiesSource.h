@@ -11,7 +11,7 @@
 
 typedef void* PropertyPtr;
 
-class IPropertiesSource {
+class PropertiesSource {
 protected:
     virtual PropertyPtr getProperty(const std::string &name) = 0;
 
@@ -32,7 +32,7 @@ public:
     }
 };
 
-class InCodePropertiesSource : public IPropertiesSource {
+class InCodePropertiesSource : public PropertiesSource {
     typedef std::variant<std::string, uint16_t, PropertyPtr> PropertyStorage;
     std::unordered_map<std::string, PropertyStorage> _props;
 public:

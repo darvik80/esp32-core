@@ -4,89 +4,95 @@
 
 #pragma once
 
+#include <utility>
+
 #include "PropertiesSource.h"
+#include "Service.h"
 #include "message/MessageBus.h"
-#include "LibServiceId.h"
-#include <vector>
-#include <array>
-#include <string>
-#include <algorithm>
 
-class IRegistry;
-
-class IMessageBus;
-
-class IService {
+class Registry {
 public:
-    [[nodiscard]] virtual ServiceId getServiceId() const = 0;
-
-    virtual void setup() = 0;
-
-    virtual void loop() = 0;
-
-    virtual IRegistry *getRegistry() = 0;
-
-    virtual IMessageBus *getMessageBus() = 0;
-
-    virtual ~IService() = default;
-};
-
-typedef std::vector<IService *> ServiceArray;
-
-class IRegistry {
-public:
-    template<typename C, typename ... T>
-    void create(T &&... all) {
-        add(new C(this, std::forward<T>(all)...));
+    template<typename C, typename... T>
+    void createSystem(T &&... all) {
+        addSystemService(new C(std::forward<T>(all)...));
     }
 
-    virtual void add(IService *service) = 0;
+    template<typename C, typename... T>
+    void create(T &&... all) {
+        addUserService(new C(std::forward<T>(all)...));
+    }
 
-    virtual ServiceArray &getServices() = 0;
+    virtual void addSystemService(Service *service) = 0;
+
+    virtual ServiceArray &getSystemServices() = 0;
+
+    virtual void addUserService(Service *service) = 0;
+
+    virtual ServiceArray &getUserServices() = 0;
 
     template<typename C>
-    C *getService(ServiceId id) {
-        auto services = getServices();
-        if (id < services.size()) {
-            return static_cast<C *>(services[(size_t) id]);
+    C *getSystemService(ServiceId id) {
+        if (!id) {
+            return nullptr;
+        }
+        for (auto service: getSystemServices()) {
+            if (service->getServiceId() == id) {
+                return service;
+            }
         }
 
         return nullptr;
     }
 
-    virtual IMessageBus *getMessageBus() = 0;
-
-    virtual IPropertiesSource *getProperties() = 0;
-};
-
-class Registry : public IRegistry {
-    ServiceArray _services{USER_SERVICES+8};
-
-    IMessageBus *_bus;
-    IPropertiesSource *_props;
-public:
-    explicit Registry(IMessageBus *bus, IPropertiesSource *props)
-            : _bus(bus), _props(props) {
-    }
-
-    void add(IService *service) override {
-        if (service->getServiceId() >= _services.size()) {
-            _services.resize(service->getServiceId() + 1);
+    template<typename C>
+    C *getUserService(ServiceId id) {
+        if (!id) {
+            return nullptr;
+        }
+        for (auto service: getUserServices()) {
+            if (service->getServiceId() == id) {
+                return service;
+            }
         }
 
-        _services[service->getServiceId()] = service;
+        return nullptr;
     }
 
-    ServiceArray &getServices() override {
-        return _services;
+    virtual PropertiesSource &getProperties() = 0;
+
+    virtual MessageBus &getMessageBus() = 0;
+};
+
+template<typename MsgBus, typename PropSource = InCodePropertiesSource>
+class TRegistry : public Registry {
+    ServiceArray _sysServices;
+    ServiceArray _userServices;
+    MsgBus _bus;
+
+    PropSource _source;
+public:
+    void addSystemService(Service *service) override {
+        _sysServices.push_back(service);
     }
 
-    IMessageBus *getMessageBus() override {
+    ServiceArray &getSystemServices() override {
+        return _sysServices;
+    }
+
+    void addUserService(Service *service) override {
+        _userServices.push_back(service);
+    }
+
+    ServiceArray &getUserServices() override {
+        return _userServices;
+    }
+
+    PropertiesSource &getProperties() override {
+        return _source;
+    }
+
+    MessageBus &getMessageBus() override {
         return _bus;
-    }
-
-    IPropertiesSource *getProperties() override {
-        return _props;
     }
 };
 

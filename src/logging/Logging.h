@@ -46,22 +46,22 @@ namespace logging {
             Serial.printf("%08lu", millis());
             switch (lvl) {
                 case level::debug:
-                    Serial.print(" [debug]");
+                    Serial.print(" [d]");
                     break;
                 case level::info:
-                    Serial.print(" [ info]");
+                    Serial.print(" [i]");
                     break;
                 case level::warning:
-                    Serial.print(" [ warn]");
+                    Serial.print(" [w]");
                     break;
                 case level::error:
-                    Serial.print(" [error]");
+                    Serial.print(" [e]");
                     break;
                 case level::critical:
-                    Serial.print(" [ crit]");
+                    Serial.print(" [c]");
                     break;
                 default:
-                    Serial.print(" [ unk]");
+                    Serial.print(" [u]");
                     break;
             }
             if (module) {
@@ -82,22 +82,22 @@ namespace logging {
             Serial.printf("\033[38;5;15m%08lu [", millis());
             switch (lvl) {
                 case level::debug:
-                    Serial.print("\033[1;37mdebug");
+                    Serial.print("\033[1;37md");
                     break;
                 case level::info:
-                    Serial.print("\033[1;32m info");
+                    Serial.print("\033[1;32mi");
                     break;
                 case level::warning:
-                    Serial.print("\033[1;33m warn");
+                    Serial.print("\033[1;33mw");
                     break;
                 case level::error:
-                    Serial.print("\033[1;31merror");
+                    Serial.print("\033[1;31me");
                     break;
                 case level::critical:
-                    Serial.print("\033[1;31m crit");
+                    Serial.print("\033[1;31mc");
                     break;
                 default:
-                    Serial.print("\033[1;31m  unk");
+                    Serial.print("\033[1;31mu");
                     break;
             }
             Serial.print("\033[38;5;15m]");

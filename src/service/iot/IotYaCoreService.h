@@ -4,57 +4,46 @@
 
 #pragma once
 
-#ifdef MQTT_SERVICE
-
 #include "service/Service.h"
-#include "UserMessage.h"
 #include "MyProps.h"
 #include "IotService.h"
 
-LOG_COMPONENT_SETUP(iot)
-
-class IotYaCoreService : public IotService, public TMessageSubscriber<IotYaCoreService, MqttConnected> {
+class IotYaCoreService : public IotService {
+    bool _isConn{false};
     const char *TELEMETRY = "$me/device/events";
-    const char *STATE = "$me/device/events";
     const char *COMMANDS = "$me/device/commands";
 public:
-    explicit IotYaCoreService(IRegistry *registry) : IotService(registry) {}
-
-    [[nodiscard]] ServiceId getServiceId() const override {
-        return IOT;
+    void onMessage(const MqttConnected &event) override {
+        sendMessage(_bus, MqttSubscribe{COMMANDS, 1});
+        _isConn = true;
     }
 
-    void setup() override {
-        getMessageBus()->subscribe(this);
-
-        Service::setup();
-    }
-
-    void telemetry(std::string_view data) override {
+    void onMessage(const IoTTelemetry &event) override {
+        if (!_isConn) {
+            return;
+        }
         sendMessage(
-                Service::getMessageBus(),
+                _bus,
                 MqttMessage{
                         .topic = TELEMETRY,
-                        .data = data.data(),
+                        .data = event.data,
                         .qos = 1
                 }
         );
     }
 
-    void command(std::string_view cmd, std::string_view data) override {
+    void onMessage(const IoTCommand &event) override {
+        if (!_isConn) {
+            return;
+        }
+
         sendMessage(
-                Service::getMessageBus(),
+                _bus,
                 MqttMessage{
                         .topic = COMMANDS,
-                        .data = fmt::format(R"({ "cmd": "{}", "args": {} })", cmd, data).c_str(),
+                        .data = fmt::format(R"({ "cmd": "{}", "args": {} })", event.cmd, event.data).c_str(),
                         .qos = 1
                 }
         );
     }
-
-    void onMessage(const MqttConnected& msg) {
-        sendMessage(Service::getMessageBus(),MqttSubscribe{COMMANDS, 1});
-    }
 };
-
-#endif

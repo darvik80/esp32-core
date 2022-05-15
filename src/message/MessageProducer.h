@@ -6,10 +6,12 @@
 
 #include "Message.h"
 
+#include <functional>
+
 class IMessageProducer {
 public:
-    virtual void sendMessage(const IMessage &msg) = 0;
-    virtual void sendMessage(const IMessage::Ptr &msg) = 0;
-    virtual void sendMessageISR(const IMessage::Ptr &msg) = 0;
-    virtual void scheduleMessage(uint32_t delay, bool repeat, const IMessage::Ptr &msg) = 0;
+    virtual void sendMessage(const Message &msg) = 0;
+    virtual void sendMessage(const Message::Ptr &msg) = 0;
+    virtual void sendMessageISR(const Message::Ptr &msg) = 0;
+    virtual bool schedule(uint32_t delay, bool repeat, const std::function<void()>& callback) = 0;
 };
