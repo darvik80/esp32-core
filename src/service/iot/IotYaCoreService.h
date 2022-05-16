@@ -4,17 +4,18 @@
 
 #pragma once
 
-#include "service/Service.h"
 #include "MyProps.h"
 #include "IotService.h"
 
 class IotYaCoreService : public IotService {
     bool _isConn{false};
-    const char *TELEMETRY = "$me/device/events";
+    const char *TELEMETRY = "$me/device/state";
     const char *COMMANDS = "$me/device/commands";
 public:
+    using IotService::IotService;
+
     void onMessage(const MqttConnected &event) override {
-        sendMessage(_bus, MqttSubscribe{COMMANDS, 1});
+        sendMessage(getRegistry().getMessageBus(), MqttSubscribe{COMMANDS, 1});
         _isConn = true;
     }
 
@@ -22,8 +23,9 @@ public:
         if (!_isConn) {
             return;
         }
+
         sendMessage(
-                _bus,
+                getRegistry().getMessageBus(),
                 MqttMessage{
                         .topic = TELEMETRY,
                         .data = event.data,
@@ -38,7 +40,7 @@ public:
         }
 
         sendMessage(
-                _bus,
+                getRegistry().getMessageBus(),
                 MqttMessage{
                         .topic = COMMANDS,
                         .data = fmt::format(R"({ "cmd": "{}", "args": {} })", event.cmd, event.data).c_str(),

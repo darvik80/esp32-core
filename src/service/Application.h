@@ -18,47 +18,58 @@
 
 //#include <ArduinoJson.h>
 
-class Application : public TService<>, public TMessageSubscriber<Application, WifiConnected> {
+template <typename Reg>
+class TApplication : public Service, public TMessageSubscriber<TApplication<Reg>, WifiConnected> {
+    Reg _registry;
+protected:
+    Reg& getRegistry() override {
+        return _registry;
+    }
 public:
-    explicit Application(logging::level lvl) {
+    [[nodiscard]] ServiceId getServiceId() const override {
+        return 0;
+    }
+
+    explicit TApplication(logging::level lvl) {
         Serial.begin(115200);
         logging::setLogLevel(lvl);
         logging::addLogger(new logging::SerialLogger());
     }
 
-    void setup(Registry &registry) override {
-        logging::info("Starting...");
+    void setup() override {
+        auto startTime = millis();
+        logging::info("starting...");
 
-        registry.createSystem<WifiService>();
-        registry.createSystem<MqttService>();
-        registry.getMessageBus().subscribe(this);
+        getRegistry().template createSystem<WifiService>();
+        getRegistry().template createSystem<MqttService>();
 
-        for (auto service: registry.getSystemServices()) {
+        getRegistry().getMessageBus().subscribe(this);
+
+        for (auto service: _registry.getSystemServices()) {
             if (service) {
                 logging::info("Setup {}", service->getServiceId());
-                service->setup(registry);
+                service->setup();
             }
         }
-        for (auto service: registry.getUserServices()) {
+        for (auto service: getRegistry().getUserServices()) {
             if (service) {
-                logging::info("Setup {}", service->getServiceId());
-                service->setup(registry);
+                service->setup();
             }
         }
 
-        logging::info("Started!");
+        logging::info("started, {}ms", millis()-startTime);
     }
 
-    void loop(Registry &registry) override {
-        registry.getMessageBus().loop();
-        for (auto service: registry.getSystemServices()) {
+    void loop() override {
+        getRegistry().getMessageBus().loop();
+        for (auto service: getRegistry().getSystemServices()) {
             if (service) {
-                service->loop(registry);
+                service->loop();
             }
         }
-        for (auto service: registry.getUserServices()) {
+        for (auto service: getRegistry().getUserServices()) {
             if (service) {
-                service->loop(registry);
+                service->loop();
             }
         }
     }

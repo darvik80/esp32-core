@@ -19,8 +19,8 @@ LOG_COMPONENT_SETUP(wifi);
 
 class WifiService : public TService<Service_WIFI> {
 private:
-    void raiseConnect(Registry &registry) {
-        auto& props = registry.getProperties();
+    void raiseConnect() {
+        auto& props = getRegistry().getProperties();
         WiFi.begin(
                 props.getStr(PROP_WIFI_SSID, "").c_str(),
                 props.getStr(PROP_WIFI_PASS, "").c_str()
@@ -30,26 +30,28 @@ private:
     }
 
 public:
-    void setup(Registry &registry) override {
+    using TService<Service_WIFI>::TService;
+
+    void setup() override {
         WiFi.setAutoReconnect(false);
-        WiFi.onEvent([this, &registry](arduino_event_id_t event, arduino_event_info_t info) {
-            onWifiEvent(registry, event, info);
+        WiFi.onEvent([this](arduino_event_id_t event, arduino_event_info_t info) {
+            onWifiEvent(event, info);
         }, ARDUINO_EVENT_WIFI_STA_GOT_IP);
 
-        WiFi.onEvent([this, &registry](arduino_event_id_t event, arduino_event_info_t info) {
-            onWifiEvent(registry, event, info);
+        WiFi.onEvent([this](arduino_event_id_t event, arduino_event_info_t info) {
+            onWifiEvent(event, info);
         }, ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
 
-        raiseConnect(registry);
+        raiseConnect();
     }
 
-    void onWifiEvent(Registry &registry, arduino_event_id_t event, arduino_event_info_t info) {
+    void onWifiEvent(arduino_event_id_t event, arduino_event_info_t info) {
         switch (event) {
             case ARDUINO_EVENT_WIFI_STA_GOT_IP:
                 wifi::log::info("WiFi connected");
                 wifi::log::info("Got IP address: {}", WiFi.localIP().toString().c_str());
                 sendMessage(
-                        registry.getMessageBus(),
+                        getRegistry().getMessageBus(),
                         std::make_shared<WifiConnected>(
                                 WiFi.localIP().toString().c_str(),
                                 WiFi.subnetMask().toString().c_str(),
@@ -61,11 +63,11 @@ public:
             case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
                 wifi::log::info("WiFi lost connection");
 
-                schedule(registry.getMessageBus(), 5000, false, [&registry, this]() {
-                    raiseConnect(registry);
+                schedule(getRegistry().getMessageBus(), 5000, false, [this]() {
+                    raiseConnect();
                 });
 
-                sendMessage(registry.getMessageBus(), WifiDisconnected{});
+                sendMessage(getRegistry().getMessageBus(), WifiDisconnected{});
                 break;
             default:
                 break;

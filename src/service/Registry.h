@@ -13,13 +13,13 @@
 class Registry {
 public:
     template<typename C, typename... T>
-    void createSystem(T &&... all) {
-        addSystemService(new C(std::forward<T>(all)...));
+    void create(T &&... all) {
+        addUserService(new C(this, std::forward<T>(all)...));
     }
 
     template<typename C, typename... T>
-    void create(T &&... all) {
-        addUserService(new C(std::forward<T>(all)...));
+    void createSystem(T &&... all) {
+        addSystemService(new C(this, std::forward<T>(all)...));
     }
 
     virtual void addSystemService(Service *service) = 0;

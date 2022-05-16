@@ -21,9 +21,11 @@ class Service {
 public:
     [[nodiscard]] virtual ServiceId getServiceId() const = 0;
 
-    virtual void setup(Registry &registry) = 0;
+    virtual Registry& getRegistry() = 0;
 
-    virtual void loop(Registry &registry) = 0;
+    virtual void setup() = 0;
+
+    virtual void loop() = 0;
 
     virtual ~Service() = default;
 };
@@ -32,12 +34,19 @@ typedef std::vector<Service *> ServiceArray;
 
 template<ServiceId Id = 0>
 class TService : public Service {
+    Registry &_registry;
 public:
+    explicit TService(Registry *registry) : _registry(*registry) {}
+
     [[nodiscard]] ServiceId getServiceId() const override {
         return Id;
     }
 
-    void setup(Registry &registry) override { }
+    Registry& getRegistry() override {
+        return _registry;
+    }
 
-    void loop(Registry &registry) override { }
+    void setup() override { }
+
+    void loop() override { }
 };

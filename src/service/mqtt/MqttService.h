@@ -31,31 +31,33 @@ class MqttService
 
     MqttProperties *_props{};
 private:
-    static void
-    mqtt_event_callback(void *event_handler_arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
+    static void eventCallback(void *event_handler_arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
         ((MqttService *) event_handler_arg)->onEvent((esp_mqtt_event_handle_t) event_data);
     }
 
 public:
+    using TService<Service_MQTT>::TService;
+
     void onEvent(esp_mqtt_event_handle_t event) {
         switch (event->event_id) {
             case MQTT_EVENT_CONNECTED: {
                 mqtt::log::info("connected");
+                sendMessage(getRegistry().getMessageBus(), std::make_shared<MqttConnected>(_props->uri));
                 break;
                 case MQTT_EVENT_DISCONNECTED:
                     mqtt::log::info("disconnected");
                 break;
                 case MQTT_EVENT_SUBSCRIBED:
-                    mqtt::log::info("subscribed");
+                    mqtt::log::debug("subscribed");
                 break;
                 case MQTT_EVENT_PUBLISHED:
-                    mqtt::log::info("pub-ack: {}", event->msg_id);
+                    mqtt::log::debug("pub-ack: {}", event->msg_id);
                 break;
                 case MQTT_EVENT_ERROR:
                     mqtt::log::info("error");
                 break;
                 case MQTT_EVENT_DATA:
-                    mqtt::log::info("data: {}:{}", event->topic, std::string(event->data, event->data_len));
+                    mqtt::log::debug("data: {}:{}", event->topic, std::string(event->data, event->data_len));
                 break;
                 default:
                     break;
@@ -64,10 +66,10 @@ public:
         }
     }
 
-    void setup(Registry &registry) override {
-        registry.getMessageBus().subscribe(this);
+    void setup() override {
+        getRegistry().getMessageBus().subscribe(this);
 
-        _props = registry.getProperties().get<MqttProperties>(PROP_MQTT_PROPS);
+        _props = getRegistry().getProperties().get<MqttProperties>(PROP_MQTT_PROPS);
         mqtt::log::info(
                 "user: {}, clientId: {}",
                 _props->username,
@@ -89,6 +91,10 @@ public:
     }
 
     void onMessage(const WifiConnected &msg) {
+        if (_client) {
+            esp_mqtt_client_disconnect(_client);
+            esp_mqtt_client_destroy(_client);
+        }
         mqtt::log::info("handle wifi-conn, try connect to mqtt");
         const esp_mqtt_client_config_t config{
                 .uri = _props->uri.c_str(),
@@ -102,7 +108,7 @@ public:
         };
 
         _client = esp_mqtt_client_init(&config);
-        esp_mqtt_client_register_event(_client, MQTT_EVENT_ANY, mqtt_event_callback, this);
+        esp_mqtt_client_register_event(_client, MQTT_EVENT_ANY, eventCallback, this);
         esp_mqtt_client_start(_client);
     }
 
@@ -115,7 +121,7 @@ public:
     }
 
     void subscribe(std::string_view topic, uint8_t qos = 0) {
-        mqtt::log::debug("sub: {}:{}", topic);
+        mqtt::log::info("sub: {}:{}", topic, qos);
         if (auto id = esp_mqtt_client_subscribe(_client, topic.data(), qos); id > 0) {
             mqtt::log::info("sub: {}:{}", topic, id);
         } else {
@@ -125,9 +131,9 @@ public:
 
     void publish(std::string_view topic, std::string_view data, uint8_t qos = 0) {
         mqtt::log::debug("pub: {}:{}", topic, data);
-        if (auto id = esp_mqtt_client_publish(_client, topic.data(), data.data(), (int) data.length(), qos, false);
-                id > 0) {
-            mqtt::log::info("sent: {}:{}", topic, id);
+        if (auto id = esp_mqtt_client_publish(_client, topic.data(), data.data(), (int) data.length(), qos, false); id >
+                                                                                                                    0) {
+            mqtt::log::debug("sent: {}:{}", topic, id);
         } else {
             mqtt::log::error("send failed: {}", topic);
         }

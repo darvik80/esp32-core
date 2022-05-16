@@ -39,14 +39,14 @@ public:
         _lines[line] = text;
     }
 
-    void setup(Registry& registry) override {
-        registry.getMessageBus().subscribe(this);
+    void setup() override {
+        getRegistry().getMessageBus().subscribe(this);
 
         _display = std::make_unique<U8G2_SSD1306_128X64_NONAME_1_SW_I2C>(U8G2_R0, SCL, SDA);
         _display->begin();
     }
 
-    void loop(Registry& registry) override {
+    void loop() override {
         if (millis() - _lastUpdate > 200) {
             refresh();
             _lastUpdate = millis();

@@ -11,11 +11,10 @@
 
 class IotService : public TService<Service_IoT>, public TMessageSubscriber<IotService, MqttConnected, IoTTelemetry, IoTCommand> {
 public:
-    MessageBus *_bus{};
-public:
-    void setup(Registry &registry) override {
-        _bus = &registry.getMessageBus();
-        registry.getMessageBus().subscribe(this);
+    explicit IotService(Registry *registry) : TService(registry) {}
+
+    void setup() override {
+        getRegistry().getMessageBus().subscribe(this);
     }
 
     virtual void onMessage(const MqttConnected& event) = 0;

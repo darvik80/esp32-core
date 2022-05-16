@@ -56,9 +56,8 @@ struct MqttConnected : TMessage<MQTT_CONNECTED> {
 };
 
 struct MqttMessage : TMessage<MQTT_MESSAGE> {
+    using TMessage<MQTT_MESSAGE>::TMessage;
     MqttMessage(std::string_view topic, std::string_view data, uint8_t qos) : topic(topic), data(data), qos(qos) {}
-
-    MqttMessage() = default;
 
     std::string topic;
     std::string data;
