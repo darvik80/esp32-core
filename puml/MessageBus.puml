@@ -49,6 +49,25 @@ class MQTTDisconnected {
 
 MQTTDisconnected <|.. Message
 
+class SystemMonitoringEvent {
+    +float cpuTemp
+}
+
+SystemMonitoringEvent <|.. Message
+
+class IoTTelemetry {
+    std::string_view data
+}
+
+IoTTelemetry <|.. Message
+
+class IoTCommand {
+    std::string_view cmd
+    std::string_view data
+}
+
+IoTCommand <|.. Message
+
 interface MessageSubscriber {
     void onMessage(const Message &msg)
 }
@@ -67,13 +86,13 @@ interface MessageBus {
 MessageProducer <|-- MessageBus
 MessageSubscriber <|-- MessageBus
 
-class MessageSubscriber {
+class TMessageSubscriber {
     +void onMessage(const Message &msg)
 }
 
-MessageSubscriber <|.. MessageSubscriber
+TMessageSubscriber <|.. MessageSubscriber
 
-class MessageBus {
+class TMessageBus {
     +void subscribe(MessageSubscriber *subscriber)
     +void loop()
 
@@ -84,7 +103,7 @@ class MessageBus {
     +void scheduleMessage(uint32_t delay, bool repeat, const std::shared_ptr<Message> &msg)
 }
 
-MessageBus <|.. MessageBus
+TMessageBus <|.. MessageBus
 
 Message --d[hidden]-> MessageBus
 
