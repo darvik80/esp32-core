@@ -6,8 +6,8 @@ Simple framework for ESP32/ESP8266
 ## Message Bus
 ![alternative text](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/darvik80/esp32-core/sensor/puml/MessageBus.puml)
 
-## TService
-![alternative text](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/darvik80/esp32-core/sensor/puml/TService.puml)
+## Service
+![alternative text](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/darvik80/esp32-core/sensor/puml/Service.puml)
 
 ## Sensor
 ![alternative text](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/darvik80/esp32-core/sensor/puml/Sensor.puml)
