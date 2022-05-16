@@ -12,16 +12,20 @@
 
 class Registry {
 public:
+    virtual void addSystemService(Service *service) = 0;
+
+    virtual ServiceArray &getSystemServices() = 0;
+
+    virtual void addUserService(Service *service) = 0;
+
+    virtual ServiceArray &getUserServices() = 0;
+
     template<typename C, typename... T>
     C &createSystem(T &&... all) {
         auto *service = new C(*this, std::forward<T>(all)...);
         addSystemService(service);
         return *service;
     }
-
-    virtual void addSystemService(Service *service) = 0;
-
-    virtual ServiceArray &getSystemServices() = 0;
 
     template<typename C>
     C &getSystemService(ServiceId id) {
@@ -37,15 +41,11 @@ public:
     }
 
     template<typename C, typename... T>
-    C& create(T &&... all) {
+    C &create(T &&... all) {
         auto *service = new C(*this, std::forward<T>(all)...);
         addUserService(service);
         return *service;
     }
-
-    virtual void addUserService(Service *service) = 0;
-
-    virtual ServiceArray &getUserServices() = 0;
 
     template<typename C>
     C *getUserService(ServiceId id) {
@@ -72,6 +72,7 @@ class TRegistry : public Registry {
     MsgBus _bus;
 
     PropSource _source;
+
 public:
     void addSystemService(Service *service) override {
         _sysServices.push_back(service);
@@ -98,10 +99,10 @@ public:
     }
 
     ~TRegistry() {
-        for (auto* service: _sysServices) {
+        for (auto *service: _sysServices) {
             delete service;
         }
-        for (auto* service: _userServices) {
+        for (auto *service: _userServices) {
             delete service;
         }
     }

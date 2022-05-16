@@ -55,7 +55,7 @@ public:
             MessageHolder *holder = nullptr;
             while (pdPASS == xQueueReceive(_queue, &holder, 0)) {
                 msg::log::debug("recv msg: {}", holder->msg->getMsgId());
-                postMessage(*holder->msg.get());
+                sendMessage(*holder->msg.get());
                 delete holder;
                 holder = nullptr;
             }
