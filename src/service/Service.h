@@ -14,7 +14,6 @@ enum SystemServiceId {
     Service_WIFI,
     Service_MQTT,
     Service_IoT,
-    Service_Display,
 };
 
 class Service {

@@ -5,14 +5,11 @@ skinparam classBackgroundColor LightGray
 skinparam arrowColor DarkBlue
 skinparam classBorderColor DarkBlue
 
-enum ServiceId {
-    APP,
-    WIFI,
-    MQTT,
-    OLED,
-    JOYSTICK,
-    MAX_ID
-}
+enum SystemServiceId {
+    Service_WIFI,
+    Service_MQTT,
+    Service_IoT,
+};
 
 interface Service {
     ServiceId getServiceId()
@@ -42,8 +39,9 @@ interface Registry {
 }
 
 class TService {
-    -Registry* _registry
-    +Registry* getRegistry()
+    -Registry& _registry
+
+    +Registry& getRegistry()
     +void setup()
     +void loop()
     +MessageBus *getMessageBus()
@@ -62,20 +60,23 @@ class InCodePropertiesSource {
 
 PropertiesSource <|-- InCodePropertiesSource
 
-class SimpleRegistry {
-    -ServiceArray _services
-    -MessageBus *_bus
+class TRegistry {
+    -ServiceArray _userServices
+    -ServiceArray _sysServices
+    -MessageBus &_bus
     -PropertiesSource *_props
-    +void add(Service *service)
-    +ServiceArray &getServices()
-    +MessageBus *getMessageBus()
-    +PropertiesSource *getProperties()
+    +void addSystemService(Service *service)
+    +ServiceArray &getSystemServices()
+    +void addUserService(Service *service)
+    +ServiceArray &getUserServices()
+    +MessageBus& getMessageBus()
+    +PropertiesSource &getProperties()
 }
 
-Registry <|-- SimpleRegistry
+Registry <|-- TRegistry
 
 class WifiService {
-    -Ticker _reconnectTimer;
+    -Timer _reconnectTimer;
     -void raiseConnect()
     +ServiceId getServiceId() const
     +{static} void onTimer(WifiService *service)
