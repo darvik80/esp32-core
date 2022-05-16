@@ -7,13 +7,13 @@
 #include "Message.h"
 #include "MessageLogger.h"
 
-class IMessageSubscriber {
+class MessageSubscriber {
 public:
     virtual void onMessage(const Message &msg) = 0;
 };
 
 template<typename T, typename Msg1 = void, typename Msg2 = void, typename Msg3 = void, typename Msg4 = void>
-class TMessageSubscriber : public IMessageSubscriber {
+class TMessageSubscriber : public MessageSubscriber {
 public:
     void onMessage(const Message &msg) override {
         switch (msg.getMsgId()) {
@@ -36,7 +36,7 @@ public:
 };
 
 template<typename T, typename Msg1, typename Msg2, typename Msg3>
-class TMessageSubscriber<T, Msg1, Msg2, Msg3, void> : public IMessageSubscriber {
+class TMessageSubscriber<T, Msg1, Msg2, Msg3, void> : public MessageSubscriber {
 public:
     void onMessage(const Message &msg) override {
         switch (msg.getMsgId()) {
@@ -56,7 +56,7 @@ public:
 };
 
 template<typename T, typename Msg1, typename Msg2>
-class TMessageSubscriber<T, Msg1, Msg2, void, void> : public IMessageSubscriber {
+class TMessageSubscriber<T, Msg1, Msg2, void, void> : public MessageSubscriber {
 public:
     void onMessage(const Message &msg) override {
         switch (msg.getMsgId()) {
@@ -73,7 +73,7 @@ public:
 };
 
 template<typename T, typename Msg1>
-class TMessageSubscriber<T, Msg1, void, void, void> : public IMessageSubscriber {
+class TMessageSubscriber<T, Msg1, void, void, void> : public MessageSubscriber {
 public:
     void onMessage(const Message &msg) override {
         switch (msg.getMsgId()) {

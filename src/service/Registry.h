@@ -6,52 +6,54 @@
 
 #include <utility>
 
-#include "PropertiesSource.h"
 #include "Service.h"
+#include "PropertiesSource.h"
 #include "message/MessageBus.h"
 
 class Registry {
 public:
     template<typename C, typename... T>
-    void create(T &&... all) {
-        addUserService(new C(this, std::forward<T>(all)...));
-    }
-
-    template<typename C, typename... T>
-    void createSystem(T &&... all) {
-        addSystemService(new C(this, std::forward<T>(all)...));
+    C &createSystem(T &&... all) {
+        auto *service = new C(*this, std::forward<T>(all)...);
+        addSystemService(service);
+        return *service;
     }
 
     virtual void addSystemService(Service *service) = 0;
 
     virtual ServiceArray &getSystemServices() = 0;
 
-    virtual void addUserService(Service *service) = 0;
-
-    virtual ServiceArray &getUserServices() = 0;
-
     template<typename C>
-    C *getSystemService(ServiceId id) {
-        if (!id) {
-            return nullptr;
-        }
-        for (auto service: getSystemServices()) {
-            if (service->getServiceId() == id) {
-                return service;
+    C &getSystemService(ServiceId id) {
+        if (id) {
+            for (auto service: getSystemServices()) {
+                if (service->getServiceId() == id) {
+                    return service;
+                }
             }
         }
 
         return nullptr;
     }
 
+    template<typename C, typename... T>
+    C& create(T &&... all) {
+        auto *service = new C(*this, std::forward<T>(all)...);
+        addUserService(service);
+        return *service;
+    }
+
+    virtual void addUserService(Service *service) = 0;
+
+    virtual ServiceArray &getUserServices() = 0;
+
     template<typename C>
     C *getUserService(ServiceId id) {
-        if (!id) {
-            return nullptr;
-        }
-        for (auto service: getUserServices()) {
-            if (service->getServiceId() == id) {
-                return service;
+        if (id) {
+            for (auto service: getUserServices()) {
+                if (service->getServiceId() == id) {
+                    return service;
+                }
             }
         }
 
@@ -93,6 +95,15 @@ public:
 
     MessageBus &getMessageBus() override {
         return _bus;
+    }
+
+    ~TRegistry() {
+        for (auto* service: _sysServices) {
+            delete service;
+        }
+        for (auto* service: _userServices) {
+            delete service;
+        }
     }
 };
 

@@ -7,20 +7,25 @@
 #include "message/Message.h"
 
 enum MessageId {
+    // wifi
     WIFI_CONNECTED,
     WIFI_DISCONNECTED,
+
+    // mqtt
     MQTT_CONNECTED,
     MQTT_DISCONNECTED,
     MQTT_MESSAGE,
     MQTT_SUBSCRIBE,
-    JOYSTICK_EVENT,
-    DISPLAY_TEXT,
-    SYS_MON,
 
+    // iot
     IOT_TELEMETRY,
     IOT_COMMAND,
 
-    USER_EVENT
+    // sys monitoring
+    SYS_MON,
+
+    JOYSTICK_EVENT,
+    DISPLAY_TEXT,
 };
 
 class WifiConnected : public TMessage<WIFI_CONNECTED> {
@@ -35,17 +40,6 @@ public:
 };
 
 class WifiDisconnected : public TMessage<WIFI_DISCONNECTED> {
-};
-
-struct JoystickEvent : public TMessage<JOYSTICK_EVENT> {
-    struct Axis {
-        int x{};
-        int y{};
-        bool btn{};
-    };
-
-    Axis leftAxis{};
-    Axis rightAxis{};
 };
 
 struct MqttConnected : TMessage<MQTT_CONNECTED> {
@@ -76,16 +70,6 @@ struct MqttSubscribe : TMessage<MQTT_SUBSCRIBE> {
 struct MqttDisconnected : TMessage<MQTT_DISCONNECTED> {
 
 };
-
-struct DisplayText : TMessage<DISPLAY_TEXT> {
-    DisplayText(int line, const std::string_view &text) : line(line), text(text) {}
-
-    DisplayText() = default;
-
-    int line{};
-    std::string_view text;
-};
-
 
 struct SystemMonitoringEvent : TMessage<SYS_MON> {
     float cpuTemp{};

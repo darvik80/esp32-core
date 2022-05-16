@@ -13,13 +13,13 @@
 #include <freertos/queue.h>
 #include "system/Timer.h"
 
-class MessageBus : public IMessageSubscriber, public IMessageProducer {
+class MessageBus : public MessageSubscriber, public MessageProducer {
 public:
-    inline void subscribe(IMessageSubscriber &subscriber) {
+    inline void subscribe(MessageSubscriber &subscriber) {
         subscribe(&subscriber);
     }
 
-    virtual void subscribe(IMessageSubscriber *subscriber) = 0;
+    virtual void subscribe(MessageSubscriber *subscriber) = 0;
 
     virtual void loop() = 0;
 };
@@ -28,21 +28,18 @@ template<size_t queueSize = 10, size_t timerSize = 10>
 class TMessageBus : public MessageBus {
     struct MessageHolder {
         std::shared_ptr<Message> msg;
-        TimerHandle_t handler{};
-        TMessageBus *bus{nullptr};
-        bool repeat{false};
     };
-    std::array<Timer, timerSize> _timers;
 
+    std::array<Timer, timerSize> _timers;
     QueueHandle_t _queue;
 
-    std::vector<IMessageSubscriber *> _subscribers;
+    std::vector<MessageSubscriber *> _subscribers;
 public:
     TMessageBus() {
         _queue = xQueueCreate(queueSize, sizeof(void *));
     }
 
-    void subscribe(IMessageSubscriber *subscriber) override {
+    void subscribe(MessageSubscriber *subscriber) override {
         _subscribers.emplace_back(subscriber);
     }
 
@@ -58,8 +55,9 @@ public:
             MessageHolder *holder = nullptr;
             while (pdPASS == xQueueReceive(_queue, &holder, 0)) {
                 msg::log::debug("recv msg: {}", holder->msg->getMsgId());
-                sendMessage(*holder->msg.get());
+                postMessage(*holder->msg.get());
                 delete holder;
+                holder = nullptr;
             }
         }
     }
@@ -68,14 +66,14 @@ public:
         onMessage(msg);
     }
 
-    void sendMessage(const std::shared_ptr<Message> &msg) override {
+    void postMessage(const Message::Ptr &msg) override {
         if (_queue) {
-            auto holder = new MessageHolder{msg};
+            auto* holder = new MessageHolder{msg};
             xQueueSendToBack(_queue, &holder, portMAX_DELAY);
         }
     }
 
-    void sendMessageISR(const std::shared_ptr<Message> &msg) override {
+    void postMessageISR(const std::shared_ptr<Message> &msg) override {
         if (_queue) {
             auto holder = new MessageHolder{msg};
             xQueueSendFromISR(_queue, &holder, nullptr);
@@ -100,26 +98,26 @@ public:
     }
 };
 
-inline static void sendMessage(IMessageProducer &pub, const Message &msg) {
+inline static void sendMessage(MessageProducer &pub, const Message &msg) {
     pub.sendMessage(msg);
 }
 
-inline static void sendMessage(IMessageProducer *pub, const Message &msg) {
+inline static void sendMessage(MessageProducer *pub, const Message &msg) {
     sendMessage(*pub, msg);
 }
 
-inline static bool schedule(IMessageProducer &pub, uint32_t delay, bool repeat, const std::function<void()> &callback) {
+inline static bool schedule(MessageProducer &pub, uint32_t delay, bool repeat, const std::function<void()> &callback) {
     return pub.schedule(delay, repeat, callback);
 }
 
-inline static bool schedule(IMessageProducer *pub, uint32_t delay, bool repeat, const std::function<void()> &callback) {
+inline static bool schedule(MessageProducer *pub, uint32_t delay, bool repeat, const std::function<void()> &callback) {
     return schedule(*pub, delay, repeat, callback);
 }
 
-inline static void sendMessage(IMessageProducer &pub, const std::shared_ptr<Message> &msg) {
-    pub.sendMessage(msg);
+inline static void sendMessage(MessageProducer &pub, const std::shared_ptr<Message> &msg) {
+    pub.postMessage(msg);
 }
 
-inline static void sendMessage(IMessageProducer *pub, const std::shared_ptr<Message> &msg) {
+inline static void sendMessage(MessageProducer *pub, const std::shared_ptr<Message> &msg) {
     sendMessage(*pub, msg);
 }

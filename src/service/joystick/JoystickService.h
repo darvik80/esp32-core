@@ -4,9 +4,9 @@
 
 #pragma once
 
-#include "service/Config.h"
-
 #ifdef JOY_SERVICE
+
+#include "service/Config.h"
 
 #include "logging/Logging.h"
 
@@ -20,6 +20,18 @@ LOG_COMPONENT_SETUP(joy);
 #include "sensor/AxisSensor.h"
 
 #include "esp_adc_cal.h"
+
+
+struct JoystickEvent : public TMessage<JOYSTICK_EVENT> {
+    struct Axis {
+        int x{};
+        int y{};
+        bool btn{};
+    };
+
+    Axis leftAxis{};
+    Axis rightAxis{};
+};
 
 struct ADCAvg {
     std::array<int, 16> buf{};

@@ -11,7 +11,7 @@
 
 class IotService : public TService<Service_IoT>, public TMessageSubscriber<IotService, MqttConnected, IoTTelemetry, IoTCommand> {
 public:
-    explicit IotService(Registry *registry) : TService(registry) {}
+    explicit IotService(Registry &registry) : TService(registry) {}
 
     void setup() override {
         getRegistry().getMessageBus().subscribe(this);

@@ -4,6 +4,8 @@
 
 #pragma once
 
+#ifdef OLED_SERVICE
+
 #include "service/Config.h"
 
 #include "service/Service.h"
@@ -11,6 +13,15 @@
 #include <array>
 #include <memory>
 #include <pins_arduino.h>
+
+struct DisplayText : TMessage<DISPLAY_TEXT> {
+    DisplayText(int line, const std::string_view &text) : line(line), text(text) {}
+
+    DisplayText() = default;
+
+    int line{};
+    std::string_view text;
+};
 
 class DisplayService : public TService<Service_Display> , public TMessageSubscriber<DisplayService, DisplayText>{
     std::unique_ptr<U8G2> _display;
@@ -57,3 +68,5 @@ public:
         setText(msg.line, msg.text);
     }
 };
+
+#endif

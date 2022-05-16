@@ -4,30 +4,22 @@
 
 #pragma once
 
-#include <service/Registry.h>
-#include <service/Service.h>
-#include "message/Message.h"
-#include <message/MessageBus.h>
-
+#include "logging/Logging.h"
 #include "service/Config.h"
-#include <service/wifi/WifiService.h>
-#include <service/display/DisplayService.h>
-#include <service/joystick/JoystickService.h>
-#include <service/mqtt/MqttService.h>
-#include <service/iot/IotYaCoreService.h>
 
-//#include <ArduinoJson.h>
+#include "message/MessageBus.h"
 
-template <typename Reg>
-class TApplication : public Service, public TMessageSubscriber<TApplication<Reg>, WifiConnected> {
-    Reg _registry;
-protected:
-    Reg& getRegistry() override {
-        return _registry;
-    }
+#include "service/Registry.h"
+#include "service/wifi/WifiService.h"
+#include "service/mqtt/MqttService.h"
+#include "service/iot/IotYaCoreService.h"
+
+template <class Reg>
+class TApplication {
+    Reg _reg;
 public:
-    [[nodiscard]] ServiceId getServiceId() const override {
-        return 0;
+    Registry& getRegistry() {
+        return _reg;
     }
 
     explicit TApplication(logging::level lvl) {
@@ -36,16 +28,14 @@ public:
         logging::addLogger(new logging::SerialLogger());
     }
 
-    void setup() override {
+    virtual void setup() {
         auto startTime = millis();
         logging::info("starting...");
 
         getRegistry().template createSystem<WifiService>();
         getRegistry().template createSystem<MqttService>();
 
-        getRegistry().getMessageBus().subscribe(this);
-
-        for (auto service: _registry.getSystemServices()) {
+        for (auto service: getRegistry().getSystemServices()) {
             if (service) {
                 logging::info("Setup {}", service->getServiceId());
                 service->setup();
@@ -60,7 +50,7 @@ public:
         logging::info("started, {}ms", millis()-startTime);
     }
 
-    void loop() override {
+    virtual void loop() {
         getRegistry().getMessageBus().loop();
         for (auto service: getRegistry().getSystemServices()) {
             if (service) {
@@ -72,9 +62,5 @@ public:
                 service->loop();
             }
         }
-    }
-
-    virtual void onMessage(const WifiConnected &msg) {
-        logging::info("WiFi connected: {}/{}, {}, {}", msg.ip, msg.mask, msg.gateway, msg.macAddress);
     }
 };

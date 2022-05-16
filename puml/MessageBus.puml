@@ -49,38 +49,38 @@ class MQTTDisconnected {
 
 MQTTDisconnected <|.. Message
 
-interface IMessageSubscriber {
+interface MessageSubscriber {
     void onMessage(const Message &msg)
 }
 
-interface IMessageProducer {
+interface MessageProducer {
     void sendMessage(const Message &msg)
     void sendMessage(const std::shared_ptr<Message> &msg)
     void scheduleMessage(uint32_t delay, bool repeat, const std::shared_ptr<Message> &msg)
 }
 
 interface MessageBus {
-    void subscribe(IMessageSubscriber *subscriber)
+    void subscribe(MessageSubscriber *subscriber)
     void loop()
 }
 
-IMessageProducer <|-- MessageBus
-IMessageSubscriber <|-- MessageBus
+MessageProducer <|-- MessageBus
+MessageSubscriber <|-- MessageBus
 
 class MessageSubscriber {
     +void onMessage(const Message &msg)
 }
 
-IMessageSubscriber <|.. MessageSubscriber
+MessageSubscriber <|.. MessageSubscriber
 
 class MessageBus {
-    +void subscribe(IMessageSubscriber *subscriber)
+    +void subscribe(MessageSubscriber *subscriber)
     +void loop()
 
     +void onMessage(const Message &msg)
 
     +void sendMessage(const Message &msg)
-    +void sendMessage(const std::shared_ptr<Message> &msg)
+    +void postMessage(const std::shared_ptr<Message> &msg)
     +void scheduleMessage(uint32_t delay, bool repeat, const std::shared_ptr<Message> &msg)
 }
 

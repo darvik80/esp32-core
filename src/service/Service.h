@@ -36,7 +36,7 @@ template<ServiceId Id = 0>
 class TService : public Service {
     Registry &_registry;
 public:
-    explicit TService(Registry *registry) : _registry(*registry) {}
+    explicit TService(Registry &registry) : _registry(registry) {}
 
     [[nodiscard]] ServiceId getServiceId() const override {
         return Id;
